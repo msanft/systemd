@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #if HAVE_VALGRIND_MEMCHECK_H
-#include <valgrind/memcheck.h>
+#        include <valgrind/memcheck.h>
 #endif
 
 #include <fcntl.h>
@@ -76,25 +76,25 @@
 #include "utf8.h"
 
 /* If not configured otherwise use a minimal partition size of 10M */
-#define DEFAULT_MIN_SIZE (10ULL*1024ULL*1024ULL)
+#define DEFAULT_MIN_SIZE (10ULL * 1024ULL * 1024ULL)
 
 /* Hard lower limit for new partition sizes */
 #define HARD_MIN_SIZE 4096ULL
 
 /* We know up front we're never going to put more than this in a verity sig partition. */
-#define VERITY_SIG_SIZE (HARD_MIN_SIZE*4ULL)
+#define VERITY_SIG_SIZE (HARD_MIN_SIZE * 4ULL)
 
 /* libfdisk takes off slightly more than 1M of the disk size when creating a GPT disk label */
-#define GPT_METADATA_SIZE (1044ULL*1024ULL)
+#define GPT_METADATA_SIZE (1044ULL * 1024ULL)
 
 /* LUKS2 takes off 16M of the partition size with its metadata by default */
-#define LUKS2_METADATA_SIZE (16ULL*1024ULL*1024ULL)
+#define LUKS2_METADATA_SIZE (16ULL * 1024ULL * 1024ULL)
 
 /* To do LUKS2 offline encryption, we need to keep some extra free space at the end of the partition. */
-#define LUKS2_METADATA_KEEP_FREE (LUKS2_METADATA_SIZE*2ULL)
+#define LUKS2_METADATA_KEEP_FREE (LUKS2_METADATA_SIZE * 2ULL)
 
 /* LUKS2 volume key size. */
-#define VOLUME_KEY_SIZE (512ULL/8ULL)
+#define VOLUME_KEY_SIZE (512ULL / 8ULL)
 
 /* Use 4K as the default filesystem sector size because as long as the partitions are aligned to 4K, the
  * filesystems will then also be compatible with sector sizes 512, 1024 and 2048. */
@@ -108,12 +108,12 @@
  * waste 3K per partition, which is probably fine. */
 
 typedef enum EmptyMode {
-        EMPTY_UNSET,    /* no choice has been made yet */
-        EMPTY_REFUSE,   /* refuse empty disks, never create a partition table */
-        EMPTY_ALLOW,    /* allow empty disks, create partition table if necessary */
-        EMPTY_REQUIRE,  /* require an empty disk, create a partition table */
-        EMPTY_FORCE,    /* make disk empty, erase everything, create a partition table always */
-        EMPTY_CREATE,   /* create disk as loopback file, create a partition table always */
+        EMPTY_UNSET,   /* no choice has been made yet */
+        EMPTY_REFUSE,  /* refuse empty disks, never create a partition table */
+        EMPTY_ALLOW,   /* allow empty disks, create partition table if necessary */
+        EMPTY_REQUIRE, /* require an empty disk, create a partition table */
+        EMPTY_FORCE,   /* make disk empty, erase everything, create a partition table always */
+        EMPTY_CREATE,  /* create disk as loopback file, create a partition table always */
         _EMPTY_MODE_MAX,
         _EMPTY_MODE_INVALID = -EINVAL,
 } EmptyMode;
@@ -312,12 +312,8 @@ typedef struct Context {
 } Context;
 
 static const char *empty_mode_table[_EMPTY_MODE_MAX] = {
-        [EMPTY_UNSET]   = "unset",
-        [EMPTY_REFUSE]  = "refuse",
-        [EMPTY_ALLOW]   = "allow",
-        [EMPTY_REQUIRE] = "require",
-        [EMPTY_FORCE]   = "force",
-        [EMPTY_CREATE]  = "create",
+        [EMPTY_UNSET] = "unset",     [EMPTY_REFUSE] = "refuse", [EMPTY_ALLOW] = "allow",
+        [EMPTY_REQUIRE] = "require", [EMPTY_FORCE] = "force",   [EMPTY_CREATE] = "create",
 };
 
 static const char *encrypt_mode_table[_ENCRYPT_MODE_MAX] = {
@@ -328,15 +324,15 @@ static const char *encrypt_mode_table[_ENCRYPT_MODE_MAX] = {
 };
 
 static const char *verity_mode_table[_VERITY_MODE_MAX] = {
-        [VERITY_OFF]  = "off",
+        [VERITY_OFF] = "off",
         [VERITY_DATA] = "data",
         [VERITY_HASH] = "hash",
-        [VERITY_SIG]  = "signature",
+        [VERITY_SIG] = "signature",
 };
 
 static const char *minimize_mode_table[_MINIMIZE_MODE_MAX] = {
-        [MINIMIZE_OFF]   = "off",
-        [MINIMIZE_BEST]  = "best",
+        [MINIMIZE_OFF] = "off",
+        [MINIMIZE_BEST] = "best",
         [MINIMIZE_GUESS] = "guess",
 };
 
@@ -362,11 +358,11 @@ static uint64_t round_up_size(uint64_t v, uint64_t p) {
 static Partition *partition_new(void) {
         Partition *p;
 
-        p = new(Partition, 1);
+        p = new (Partition, 1);
         if (!p)
                 return NULL;
 
-        *p = (Partition) {
+        *p = (Partition){
                 .weight = 1000,
                 .padding_weight = 0,
                 .current_size = UINT64_MAX,
@@ -392,7 +388,7 @@ static Partition *partition_new(void) {
         return p;
 }
 
-static Partition* partition_free(Partition *p) {
+static Partition *partition_free(Partition *p) {
         if (!p)
                 return NULL;
 
@@ -481,7 +477,7 @@ static bool partition_type_defer(const GptPartitionType *type) {
         return false;
 }
 
-static Partition* partition_unlink_and_free(Context *context, Partition *p) {
+static Partition *partition_unlink_and_free(Context *context, Partition *p) {
         if (!p)
                 return NULL;
 
@@ -493,16 +489,16 @@ static Partition* partition_unlink_and_free(Context *context, Partition *p) {
         return partition_free(p);
 }
 
-DEFINE_TRIVIAL_CLEANUP_FUNC(Partition*, partition_free);
+DEFINE_TRIVIAL_CLEANUP_FUNC(Partition *, partition_free);
 
 static Context *context_new(sd_id128_t seed) {
         Context *context;
 
-        context = new(Context, 1);
+        context = new (Context, 1);
         if (!context)
                 return NULL;
 
-        *context = (Context) {
+        *context = (Context){
                 .start = UINT64_MAX,
                 .end = UINT64_MAX,
                 .total = UINT64_MAX,
@@ -544,12 +540,9 @@ static Context *context_free(Context *context) {
         return mfree(context);
 }
 
-DEFINE_TRIVIAL_CLEANUP_FUNC(Context*, context_free);
+DEFINE_TRIVIAL_CLEANUP_FUNC(Context *, context_free);
 
-static int context_add_free_area(
-                Context *context,
-                uint64_t size,
-                Partition *after) {
+static int context_add_free_area(Context *context, uint64_t size, Partition *after) {
 
         FreeArea *a;
 
@@ -559,11 +552,11 @@ static int context_add_free_area(
         if (!GREEDY_REALLOC(context->free_areas, context->n_free_areas + 1))
                 return -ENOMEM;
 
-        a = new(FreeArea, 1);
+        a = new (FreeArea, 1);
         if (!a)
                 return -ENOMEM;
 
-        *a = (FreeArea) {
+        *a = (FreeArea){
                 .size = size,
                 .after = after,
         };
@@ -582,13 +575,15 @@ static void partition_drop_or_foreignize(Partition *p) {
 
         if (PARTITION_EXISTS(p)) {
                 log_info("Can't grow existing partition %s of priority %" PRIi32 ", ignoring.",
-                         strna(p->current_label ?: p->new_label), p->priority);
+                         strna(p->current_label ?: p->new_label),
+                         p->priority);
 
                 /* Handle the partition as foreign. Do not set dropped flag. */
                 partition_foreignize(p);
         } else {
                 log_info("Can't fit partition %s of priority %" PRIi32 ", dropping.",
-                         p->definition_path, p->priority);
+                         p->definition_path,
+                         p->priority);
 
                 p->dropped = true;
                 p->allocated_to_area = NULL;
@@ -661,7 +656,8 @@ static uint64_t partition_min_size(const Context *context, const Partition *p) {
                         uint64_t f;
 
                         /* If we shall synthesize a file system, take minimal fs size into account (assumed to be 4K if not known) */
-                        f = p->format ? round_up_size(minimal_size_by_fs_name(p->format), context->grain_size) : UINT64_MAX;
+                        f = p->format ? round_up_size(minimal_size_by_fs_name(p->format), context->grain_size) :
+                                        UINT64_MAX;
                         d += f == UINT64_MAX ? context->grain_size : f;
                 }
 
@@ -669,7 +665,9 @@ static uint64_t partition_min_size(const Context *context, const Partition *p) {
                         sz = d;
         }
 
-        return MAX(round_up_size(p->size_min != UINT64_MAX ? p->size_min : DEFAULT_MIN_SIZE, context->grain_size), sz);
+        return MAX(round_up_size(p->size_min != UINT64_MAX ? p->size_min : DEFAULT_MIN_SIZE,
+                                 context->grain_size),
+                   sz);
 }
 
 static uint64_t partition_max_size(const Context *context, const Partition *p) {
@@ -754,7 +752,8 @@ static uint64_t free_area_current_end(Context *context, const FreeArea *a) {
         assert(a->after->current_size != UINT64_MAX);
 
         /* Calculate where the free area ends, based on the offset of the partition preceding it. */
-        return round_up_size(a->after->offset + a->after->current_size, context->grain_size) + free_area_available(a);
+        return round_up_size(a->after->offset + a->after->current_size, context->grain_size) +
+                        free_area_available(a);
 }
 
 static uint64_t free_area_min_end(Context *context, const FreeArea *a) {
@@ -768,7 +767,9 @@ static uint64_t free_area_min_end(Context *context, const FreeArea *a) {
         assert(a->after->current_size != UINT64_MAX);
 
         /* Calculate where the partition would end when we give it as much as it needs. */
-        return round_up_size(a->after->offset + partition_min_size_with_padding(context, a->after), context->grain_size);
+        return round_up_size(
+                        a->after->offset + partition_min_size_with_padding(context, a->after),
+                        context->grain_size);
 }
 
 static uint64_t free_area_available_for_new_partitions(Context *context, const FreeArea *a) {
@@ -781,7 +782,7 @@ static uint64_t free_area_available_for_new_partitions(Context *context, const F
         return LESS_BY(free_area_current_end(context, a), free_area_min_end(context, a));
 }
 
-static int free_area_compare(FreeArea *const *a, FreeArea *const*b, Context *context) {
+static int free_area_compare(FreeArea * const *a, FreeArea * const *b, Context *context) {
         assert(context);
 
         return CMP(free_area_available_for_new_partitions(context, *a),
@@ -813,9 +814,10 @@ static bool context_allocate_partitions(Context *context, uint64_t *ret_largest_
         /* In any case return size of the largest free area (i.e. not the size of all free areas
          * combined!) */
         if (ret_largest_free_area)
-                *ret_largest_free_area =
-                        context->n_free_areas == 0 ? 0 :
-                        free_area_available_for_new_partitions(context, context->free_areas[context->n_free_areas-1]);
+                *ret_largest_free_area = context->n_free_areas == 0 ?
+                                0 :
+                                free_area_available_for_new_partitions(
+                                                context, context->free_areas[context->n_free_areas - 1]);
 
         /* Check that each existing partition can fit its area. */
         for (size_t i = 0; i < context->n_free_areas; i++)
@@ -885,7 +887,9 @@ static int context_sum_weights(Context *context, FreeArea *a, uint64_t *ret) {
         return 0;
 
 overflow_sum:
-        return log_error_errno(SYNTHETIC_ERRNO(EOVERFLOW), "Combined weight of partition exceeds unsigned 64-bit range, refusing.");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOVERFLOW),
+                        "Combined weight of partition exceeds unsigned 64-bit range, refusing.");
 }
 
 static uint64_t scale_by_weight(uint64_t value, uint64_t weight, uint64_t weight_sum) {
@@ -925,11 +929,7 @@ typedef enum GrowPartitionPhase {
 } GrowPartitionPhase;
 
 static bool context_grow_partitions_phase(
-                Context *context,
-                FreeArea *a,
-                GrowPartitionPhase phase,
-                uint64_t *span,
-                uint64_t *weight_sum) {
+                Context *context, FreeArea *a, GrowPartitionPhase phase, uint64_t *span, uint64_t *weight_sum) {
 
         bool try_again = false;
 
@@ -1079,7 +1079,8 @@ static int context_grow_partitions_on_free_area(Context *context, FreeArea *a) {
                 assert(a->after->offset != UINT64_MAX);
                 assert(a->after->current_size != UINT64_MAX);
 
-                span += round_up_size(a->after->offset + a->after->current_size, context->grain_size) - a->after->offset;
+                span += round_up_size(a->after->offset + a->after->current_size, context->grain_size) -
+                                a->after->offset;
         }
 
         for (GrowPartitionPhase phase = 0; phase < _GROW_PARTITION_PHASE_MAX;)
@@ -1246,28 +1247,48 @@ static int config_parse_label(
 
         r = specifier_printf(rvalue, GPT_LABEL_MAX, system_and_tmp_specifier_table, arg_root, NULL, &resolved);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to expand specifiers in Label=, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to expand specifiers in Label=, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
         if (!utf8_is_valid(resolved)) {
-                log_syntax(unit, LOG_WARNING, filename, line, 0,
-                           "Partition label not valid UTF-8, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           0,
+                           "Partition label not valid UTF-8, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
         r = gpt_partition_label_valid(resolved);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
                            "Failed to check if string is valid as GPT partition label, ignoring: \"%s\" (from \"%s\")",
-                           resolved, rvalue);
+                           resolved,
+                           rvalue);
                 return 0;
         }
         if (!r) {
-                log_syntax(unit, LOG_WARNING, filename, line, 0,
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           0,
                            "Partition label too long for GPT table, ignoring: \"%s\" (from \"%s\")",
-                           resolved, rvalue);
+                           resolved,
+                           rvalue);
                 return 0;
         }
 
@@ -1294,14 +1315,24 @@ static int config_parse_weight(
 
         r = safe_atou32(rvalue, &v);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to parse weight value, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to parse weight value, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
-        if (v > 1000U*1000U) {
-                log_syntax(unit, LOG_WARNING, filename, line, 0,
-                           "Weight needs to be in range 0…10000000, ignoring: %" PRIu32, v);
+        if (v > 1000U * 1000U) {
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           0,
+                           "Weight needs to be in range 0…10000000, ignoring: %" PRIu32,
+                           v);
                 return 0;
         }
 
@@ -1329,8 +1360,7 @@ static int config_parse_size4096(
 
         r = parse_size(rvalue, 1024, &parsed);
         if (r < 0)
-                return log_syntax(unit, LOG_ERR, filename, line, r,
-                                  "Failed to parse size value: %s", rvalue);
+                return log_syntax(unit, LOG_ERR, filename, line, r, "Failed to parse size value: %s", rvalue);
 
         if (ltype > 0)
                 *sz = round_up_size(parsed, 4096);
@@ -1340,8 +1370,16 @@ static int config_parse_size4096(
                 *sz = parsed;
 
         if (*sz != parsed)
-                log_syntax(unit, LOG_NOTICE, filename, line, r, "Rounded %s= size %" PRIu64 " %s %" PRIu64 ", a multiple of 4096.",
-                           lvalue, parsed, special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), *sz);
+                log_syntax(unit,
+                           LOG_NOTICE,
+                           filename,
+                           line,
+                           r,
+                           "Rounded %s= size %" PRIu64 " %s %" PRIu64 ", a multiple of 4096.",
+                           lvalue,
+                           parsed,
+                           special_glyph(SPECIAL_GLYPH_ARROW_RIGHT),
+                           *sz);
 
         return 0;
 }
@@ -1365,16 +1403,27 @@ static int config_parse_block_size(
 
         r = parse_size(rvalue, 1024, &parsed);
         if (r < 0)
-                return log_syntax(unit, LOG_ERR, filename, line, r,
-                                  "Failed to parse size value: %s", rvalue);
+                return log_syntax(unit, LOG_ERR, filename, line, r, "Failed to parse size value: %s", rvalue);
 
         if (parsed < 512 || parsed > 4096)
-                return log_syntax(unit, LOG_ERR, filename, line, SYNTHETIC_ERRNO(EINVAL),
-                                  "Value not between 512 and 4096: %s", rvalue);
+                return log_syntax(
+                                unit,
+                                LOG_ERR,
+                                filename,
+                                line,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Value not between 512 and 4096: %s",
+                                rvalue);
 
         if (!ISPOWEROF2(parsed))
-                return log_syntax(unit, LOG_ERR, filename, line, SYNTHETIC_ERRNO(EINVAL),
-                                  "Value not a power of 2: %s", rvalue);
+                return log_syntax(
+                                unit,
+                                LOG_ERR,
+                                filename,
+                                line,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Value not a power of 2: %s",
+                                rvalue);
 
         *blksz = parsed;
         return 0;
@@ -1400,14 +1449,26 @@ static int config_parse_fstype(
         /* Let's provide an easy way to override the chosen fstype for file system partitions */
         e = secure_getenv("SYSTEMD_REPART_OVERRIDE_FSTYPE");
         if (e && !streq(rvalue, e)) {
-                log_syntax(unit, LOG_NOTICE, filename, line, 0,
-                           "Overriding defined file system type '%s' with '%s'.", rvalue, e);
+                log_syntax(unit,
+                           LOG_NOTICE,
+                           filename,
+                           line,
+                           0,
+                           "Overriding defined file system type '%s' with '%s'.",
+                           rvalue,
+                           e);
                 rvalue = e;
         }
 
         if (!filename_is_valid(rvalue))
-                return log_syntax(unit, LOG_ERR, filename, line, 0,
-                                  "File system type is not valid, refusing: %s", rvalue);
+                return log_syntax(
+                                unit,
+                                LOG_ERR,
+                                filename,
+                                line,
+                                0,
+                                "File system type is not valid, refusing: %s",
+                                rvalue);
 
         return free_and_strdup_warn(fstype, rvalue);
 }
@@ -1431,7 +1492,7 @@ static int config_parse_copy_files(
 
         assert(rvalue);
 
-        r = extract_first_word(&p, &source, ":", EXTRACT_CUNESCAPE|EXTRACT_DONT_COALESCE_SEPARATORS);
+        r = extract_first_word(&p, &source, ":", EXTRACT_CUNESCAPE | EXTRACT_DONT_COALESCE_SEPARATORS);
         if (r < 0)
                 return log_syntax(unit, LOG_ERR, filename, line, r, "Failed to extract source path: %s", rvalue);
         if (r == 0) {
@@ -1439,7 +1500,7 @@ static int config_parse_copy_files(
                 return 0;
         }
 
-        r = extract_first_word(&p, &buffer, ":", EXTRACT_CUNESCAPE|EXTRACT_DONT_COALESCE_SEPARATORS);
+        r = extract_first_word(&p, &buffer, ":", EXTRACT_CUNESCAPE | EXTRACT_DONT_COALESCE_SEPARATORS);
         if (r < 0)
                 return log_syntax(unit, LOG_ERR, filename, line, r, "Failed to extract target path: %s", rvalue);
         if (r == 0)
@@ -1448,12 +1509,25 @@ static int config_parse_copy_files(
                 target = buffer;
 
         if (!isempty(p))
-                return log_syntax(unit, LOG_ERR, filename, line, SYNTHETIC_ERRNO(EINVAL), "Too many arguments: %s", rvalue);
+                return log_syntax(
+                                unit,
+                                LOG_ERR,
+                                filename,
+                                line,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Too many arguments: %s",
+                                rvalue);
 
-        r = specifier_printf(source, PATH_MAX-1, system_and_tmp_specifier_table, arg_root, NULL, &resolved_source);
+        r = specifier_printf(
+                        source, PATH_MAX - 1, system_and_tmp_specifier_table, arg_root, NULL, &resolved_source);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to expand specifiers in CopyFiles= source, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to expand specifiers in CopyFiles= source, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
@@ -1461,10 +1535,16 @@ static int config_parse_copy_files(
         if (r < 0)
                 return 0;
 
-        r = specifier_printf(target, PATH_MAX-1, system_and_tmp_specifier_table, arg_root, NULL, &resolved_target);
+        r = specifier_printf(
+                        target, PATH_MAX - 1, system_and_tmp_specifier_table, arg_root, NULL, &resolved_target);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to expand specifiers in CopyFiles= target, ignoring: %s", resolved_target);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to expand specifiers in CopyFiles= target, ignoring: %s",
+                           resolved_target);
                 return 0;
         }
 
@@ -1499,14 +1579,20 @@ static int config_parse_exclude_files(
                 return 0;
         }
 
-        r = specifier_printf(rvalue, PATH_MAX-1, system_and_tmp_specifier_table, arg_root, NULL, &resolved);
+        r = specifier_printf(rvalue, PATH_MAX - 1, system_and_tmp_specifier_table, arg_root, NULL, &resolved);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to expand specifiers in ExcludeFiles= path, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to expand specifiers in ExcludeFiles= path, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
-        r = path_simplify_and_warn(resolved, PATH_CHECK_ABSOLUTE|PATH_KEEP_TRAILING_SLASH, unit, filename, line, lvalue);
+        r = path_simplify_and_warn(
+                        resolved, PATH_CHECK_ABSOLUTE | PATH_KEEP_TRAILING_SLASH, unit, filename, line, lvalue);
         if (r < 0)
                 return 0;
 
@@ -1547,10 +1633,15 @@ static int config_parse_copy_blocks(
                 return 0;
         }
 
-        r = specifier_printf(rvalue, PATH_MAX-1, system_and_tmp_specifier_table, arg_root, NULL, &d);
+        r = specifier_printf(rvalue, PATH_MAX - 1, system_and_tmp_specifier_table, arg_root, NULL, &d);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to expand specifiers in CopyBlocks= source path, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to expand specifiers in CopyBlocks= source path, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
@@ -1593,10 +1684,15 @@ static int config_parse_make_dirs(
                 if (r == 0)
                         return 0;
 
-                r = specifier_printf(word, PATH_MAX-1, system_and_tmp_specifier_table, arg_root, NULL, &d);
+                r = specifier_printf(word, PATH_MAX - 1, system_and_tmp_specifier_table, arg_root, NULL, &d);
                 if (r < 0) {
-                        log_syntax(unit, LOG_WARNING, filename, line, r,
-                                   "Failed to expand specifiers in MakeDirectories= parameter, ignoring: %s", word);
+                        log_syntax(unit,
+                                   LOG_WARNING,
+                                   filename,
+                                   line,
+                                   r,
+                                   "Failed to expand specifiers in MakeDirectories= parameter, ignoring: %s",
+                                   word);
                         continue;
                 }
 
@@ -1631,8 +1727,13 @@ static int config_parse_gpt_flags(
 
         r = safe_atou64(rvalue, gpt_flags);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r,
-                           "Failed to parse Flags= value, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to parse Flags= value, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
@@ -1668,7 +1769,13 @@ static int config_parse_uuid(
 
         r = sd_id128_from_string(rvalue, &partition->new_uuid);
         if (r < 0) {
-                log_syntax(unit, LOG_WARNING, filename, line, r, "Failed to parse 128-bit ID/UUID, ignoring: %s", rvalue);
+                log_syntax(unit,
+                           LOG_WARNING,
+                           filename,
+                           line,
+                           r,
+                           "Failed to parse 128-bit ID/UUID, ignoring: %s",
+                           rvalue);
                 return 0;
         }
 
@@ -1680,7 +1787,7 @@ static int config_parse_uuid(
 static DEFINE_CONFIG_PARSE_ENUM_WITH_DEFAULT(config_parse_verity, verity_mode, VerityMode, VERITY_OFF, "Invalid verity mode");
 static DEFINE_CONFIG_PARSE_ENUM_WITH_DEFAULT(config_parse_minimize, minimize_mode, MinimizeMode, MINIMIZE_OFF, "Invalid minimize mode");
 
-static int partition_read_definition(Partition *p, const char *path, const char *const *conf_file_dirs) {
+static int partition_read_definition(Partition *p, const char *path, const char * const *conf_file_dirs) {
 
         ConfigTableItem table[] = {
                 { "Partition", "Type",                     config_parse_type,          0, &p->type                    },
@@ -1716,7 +1823,7 @@ static int partition_read_definition(Partition *p, const char *path, const char 
         };
         int r;
         _cleanup_free_ char *filename = NULL;
-        const char* dropin_dirname;
+        const char *dropin_dirname;
 
         r = path_extract_filename(path, &filename);
         if (r < 0)
@@ -1730,7 +1837,8 @@ static int partition_read_definition(Partition *p, const char *path, const char 
                         dropin_dirname,
                         arg_definitions ? NULL : arg_root,
                         "Partition\0",
-                        config_item_table_lookup, table,
+                        config_item_table_lookup,
+                        table,
                         CONFIG_PARSE_WARN,
                         p,
                         NULL,
@@ -1742,32 +1850,54 @@ static int partition_read_definition(Partition *p, const char *path, const char 
                 return 0;
 
         if (p->size_min != UINT64_MAX && p->size_max != UINT64_MAX && p->size_min > p->size_max)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "SizeMinBytes= larger than SizeMaxBytes=, refusing.");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "SizeMinBytes= larger than SizeMaxBytes=, refusing.");
 
         if (p->padding_min != UINT64_MAX && p->padding_max != UINT64_MAX && p->padding_min > p->padding_max)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "PaddingMinBytes= larger than PaddingMaxBytes=, refusing.");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "PaddingMinBytes= larger than PaddingMaxBytes=, refusing.");
 
         if (sd_id128_is_null(p->type.uuid))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Type= not defined, refusing.");
+                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL), "Type= not defined, refusing.");
 
         if ((p->copy_blocks_path || p->copy_blocks_auto) &&
             (p->format || !strv_isempty(p->copy_files) || !strv_isempty(p->make_directories)))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Format=/CopyFiles=/MakeDirectories= and CopyBlocks= cannot be combined, refusing.");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Format=/CopyFiles=/MakeDirectories= and CopyBlocks= cannot be combined, refusing.");
 
-        if ((!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories)) && streq_ptr(p->format, "swap"))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Format=swap and CopyFiles= cannot be combined, refusing.");
+        if ((!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories)) &&
+            streq_ptr(p->format, "swap"))
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Format=swap and CopyFiles= cannot be combined, refusing.");
 
         if (!p->format) {
                 const char *format = NULL;
 
-                if (!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories) || (p->encrypt != ENCRYPT_OFF && !(p->copy_blocks_path || p->copy_blocks_auto)))
+                if (!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories) ||
+                    (p->encrypt != ENCRYPT_OFF && !(p->copy_blocks_path || p->copy_blocks_auto)))
                         /* Pick "vfat" as file system for esp and xbootldr partitions, otherwise default to "ext4". */
-                        format = IN_SET(p->type.designator, PARTITION_ESP, PARTITION_XBOOTLDR) ? "vfat" : "ext4";
+                        format = IN_SET(p->type.designator, PARTITION_ESP, PARTITION_XBOOTLDR) ? "vfat" :
+                                                                                                 "ext4";
                 else if (p->type.designator == PARTITION_SWAP)
                         format = "swap";
 
@@ -1779,74 +1909,142 @@ static int partition_read_definition(Partition *p, const char *path, const char 
         }
 
         if (p->minimize != MINIMIZE_OFF && !p->format && p->verity != VERITY_HASH)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Minimize= can only be enabled if Format= or Verity=hash are set");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Minimize= can only be enabled if Format= or Verity=hash are set");
 
         if (p->minimize == MINIMIZE_BEST && (p->format && !fstype_is_ro(p->format)) && p->verity != VERITY_HASH)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Minimize=best can only be used with read-only filesystems or Verity=hash");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Minimize=best can only be used with read-only filesystems or Verity=hash");
 
-        if ((!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories)) && !mkfs_supports_root_option(p->format) && geteuid() != 0)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EPERM),
-                                  "Need to be root to populate %s filesystems with CopyFiles=/MakeDirectories=",
-                                  p->format);
+        if ((!strv_isempty(p->copy_files) || !strv_isempty(p->make_directories)) &&
+            !mkfs_supports_root_option(p->format) && geteuid() != 0)
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EPERM),
+                                "Need to be root to populate %s filesystems with CopyFiles=/MakeDirectories=",
+                                p->format);
 
-        if (p->format && fstype_is_ro(p->format) && strv_isempty(p->copy_files) && strv_isempty(p->make_directories))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Cannot format %s filesystem without source files, refusing", p->format);
+        if (p->format && fstype_is_ro(p->format) && strv_isempty(p->copy_files) &&
+            strv_isempty(p->make_directories))
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Cannot format %s filesystem without source files, refusing",
+                                p->format);
 
         if (p->verity != VERITY_OFF || p->encrypt != ENCRYPT_OFF) {
                 r = dlopen_cryptsetup();
                 if (r < 0)
-                        return log_syntax(NULL, LOG_ERR, path, 1, r,
-                                          "libcryptsetup not found, Verity=/Encrypt= are not supported: %m");
+                        return log_syntax(
+                                        NULL,
+                                        LOG_ERR,
+                                        path,
+                                        1,
+                                        r,
+                                        "libcryptsetup not found, Verity=/Encrypt= are not supported: %m");
         }
 
         if (p->verity != VERITY_OFF && !p->verity_match_key)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "VerityMatchKey= must be set if Verity=%s", verity_mode_to_string(p->verity));
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "VerityMatchKey= must be set if Verity=%s",
+                                verity_mode_to_string(p->verity));
 
         if (p->verity == VERITY_OFF && p->verity_match_key)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "VerityMatchKey= can only be set if Verity= is not \"%s\"",
-                                  verity_mode_to_string(p->verity));
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "VerityMatchKey= can only be set if Verity= is not \"%s\"",
+                                verity_mode_to_string(p->verity));
 
         if (IN_SET(p->verity, VERITY_HASH, VERITY_SIG) &&
-                (p->copy_files || p->copy_blocks_path || p->copy_blocks_auto || p->format || p->make_directories))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "CopyBlocks=/CopyFiles=/Format=/MakeDirectories= cannot be used with Verity=%s",
-                                  verity_mode_to_string(p->verity));
+            (p->copy_files || p->copy_blocks_path || p->copy_blocks_auto || p->format || p->make_directories))
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "CopyBlocks=/CopyFiles=/Format=/MakeDirectories= cannot be used with Verity=%s",
+                                verity_mode_to_string(p->verity));
 
         if (p->verity != VERITY_OFF && p->encrypt != ENCRYPT_OFF)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Encrypting verity hash/data partitions is not supported");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Encrypting verity hash/data partitions is not supported");
 
         if (p->verity == VERITY_SIG && !arg_private_key)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Verity signature partition requested but no private key provided (--private-key=)");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Verity signature partition requested but no private key provided (--private-key=)");
 
         if (p->verity == VERITY_SIG && !arg_certificate)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "Verity signature partition requested but no PEM certificate provided (--certificate=)");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Verity signature partition requested but no PEM certificate provided (--certificate=)");
 
         if (p->verity == VERITY_SIG && (p->size_min != UINT64_MAX || p->size_max != UINT64_MAX))
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                  "SizeMinBytes=/SizeMaxBytes= cannot be used with Verity=%s",
-                                  verity_mode_to_string(p->verity));
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "SizeMinBytes=/SizeMaxBytes= cannot be used with Verity=%s",
+                                verity_mode_to_string(p->verity));
 
         if (!strv_isempty(p->subvolumes) && arg_offline > 0)
-                return log_syntax(NULL, LOG_ERR, path, 1, SYNTHETIC_ERRNO(EOPNOTSUPP),
-                                  "Subvolumes= cannot be used with --offline=yes");
+                return log_syntax(
+                                NULL,
+                                LOG_ERR,
+                                path,
+                                1,
+                                SYNTHETIC_ERRNO(EOPNOTSUPP),
+                                "Subvolumes= cannot be used with --offline=yes");
 
         /* Verity partitions are read only, let's imply the RO flag hence, unless explicitly configured otherwise. */
-        if ((IN_SET(p->type.designator,
-                    PARTITION_ROOT_VERITY,
-                    PARTITION_USR_VERITY) || p->verity == VERITY_DATA) && p->read_only < 0)
+        if ((IN_SET(p->type.designator, PARTITION_ROOT_VERITY, PARTITION_USR_VERITY) ||
+             p->verity == VERITY_DATA) &&
+            p->read_only < 0)
                 p->read_only = true;
 
         /* Default to "growfs" on, unless read-only */
-        if (gpt_partition_type_knows_growfs(p->type) &&
-            p->read_only <= 0)
+        if (gpt_partition_type_knows_growfs(p->type) && p->read_only <= 0)
                 p->growfs = true;
 
         if (!p->split_name_format) {
@@ -1910,7 +2108,7 @@ static int context_open_and_lock_backing_fd(const char *node, int operation, int
         if (*backing_fd >= 0)
                 return 0;
 
-        fd = open(node, O_RDONLY|O_CLOEXEC);
+        fd = open(node, O_RDONLY | O_CLOEXEC);
         if (fd < 0)
                 return log_error_errno(errno, "Failed to open device '%s': %m", node);
 
@@ -2011,7 +2209,8 @@ static int context_copy_from_one(Context *context, const char *src) {
         if (r < 0)
                 return log_error_errno(r, "%s is not a file: %m", src);
 
-        r = fdisk_new_context_at(fd, /* path = */ NULL, /* read_only = */ true, /* sector_size = */ UINT32_MAX, &c);
+        r = fdisk_new_context_at(
+                        fd, /* path = */ NULL, /* read_only = */ true, /* sector_size = */ UINT32_MAX, &c);
         if (r < 0)
                 return log_error_errno(r, "Failed to create fdisk context: %m");
 
@@ -2020,10 +2219,16 @@ static int context_copy_from_one(Context *context, const char *src) {
 
         /* Insist on a power of two, and that it's a multiple of 512, i.e. the traditional sector size. */
         if (secsz < 512 || !ISPOWEROF2(secsz))
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Sector size %lu is not a power of two larger than 512? Refusing.", secsz);
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Sector size %lu is not a power of two larger than 512? Refusing.",
+                                secsz);
 
         if (!fdisk_is_labeltype(c, FDISK_DISKLABEL_GPT))
-                return log_error_errno(SYNTHETIC_ERRNO(EHWPOISON), "Cannot copy from disk %s with no GPT disk label.", src);
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EHWPOISON),
+                                "Cannot copy from disk %s with no GPT disk label.",
+                                src);
 
         r = fdisk_get_partitions(c, &t);
         if (r < 0)
@@ -2046,10 +2251,11 @@ static int context_copy_from_one(Context *context, const char *src) {
                 if (fdisk_partition_is_used(p) <= 0)
                         continue;
 
-                if (fdisk_partition_has_start(p) <= 0 ||
-                    fdisk_partition_has_size(p) <= 0 ||
+                if (fdisk_partition_has_start(p) <= 0 || fdisk_partition_has_size(p) <= 0 ||
                     fdisk_partition_has_partno(p) <= 0)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Found a partition without a position, size or number.");
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Found a partition without a position, size or number.");
 
                 r = fdisk_partition_get_type_as_id128(p, &ptid);
                 if (r < 0)
@@ -2069,11 +2275,11 @@ static int context_copy_from_one(Context *context, const char *src) {
                 }
 
                 sz = fdisk_partition_get_size(p);
-                assert(sz <= UINT64_MAX/secsz);
+                assert(sz <= UINT64_MAX / secsz);
                 sz *= secsz;
 
                 start = fdisk_partition_get_start(p);
-                assert(start <= UINT64_MAX/secsz);
+                assert(start <= UINT64_MAX / secsz);
                 start *= secsz;
 
                 if (partition_type_exclude(&type))
@@ -2139,14 +2345,19 @@ static int context_copy_from(Context *context) {
 static int context_read_definitions(Context *context) {
         _cleanup_strv_free_ char **files = NULL;
         Partition *last = LIST_FIND_TAIL(partitions, context->partitions);
-        const char *const *dirs;
+        const char * const *dirs;
         int r;
 
         assert(context);
 
-        dirs = (const char* const*) (arg_definitions ?: CONF_PATHS_STRV("repart.d"));
+        dirs = (const char * const *) (arg_definitions ?: CONF_PATHS_STRV("repart.d"));
 
-        r = conf_files_list_strv(&files, ".conf", arg_definitions ? NULL : arg_root, CONF_FILES_REGULAR|CONF_FILES_FILTER_MASKED, dirs);
+        r = conf_files_list_strv(
+                        &files,
+                        ".conf",
+                        arg_definitions ? NULL : arg_root,
+                        CONF_FILES_REGULAR | CONF_FILES_FILTER_MASKED,
+                        dirs);
         if (r < 0)
                 return log_error_errno(r, "Failed to enumerate *.conf files: %m");
 
@@ -2190,23 +2401,51 @@ static int context_read_definitions(Context *context) {
                         r = find_verity_sibling(context, p, mode, &q);
                         if (r == -ENXIO) {
                                 if (mode != VERITY_SIG)
-                                        return log_syntax(NULL, LOG_ERR, p->definition_path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                                          "Missing verity %s partition for verity %s partition with VerityMatchKey=%s",
-                                                          verity_mode_to_string(mode), verity_mode_to_string(p->verity), p->verity_match_key);
+                                        return log_syntax(
+                                                        NULL,
+                                                        LOG_ERR,
+                                                        p->definition_path,
+                                                        1,
+                                                        SYNTHETIC_ERRNO(EINVAL),
+                                                        "Missing verity %s partition for verity %s partition with VerityMatchKey=%s",
+                                                        verity_mode_to_string(mode),
+                                                        verity_mode_to_string(p->verity),
+                                                        p->verity_match_key);
                         } else if (r == -ENOTUNIQ)
-                                return log_syntax(NULL, LOG_ERR, p->definition_path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                                  "Multiple verity %s partitions found for verity %s partition with VerityMatchKey=%s",
-                                                  verity_mode_to_string(mode), verity_mode_to_string(p->verity), p->verity_match_key);
+                                return log_syntax(
+                                                NULL,
+                                                LOG_ERR,
+                                                p->definition_path,
+                                                1,
+                                                SYNTHETIC_ERRNO(EINVAL),
+                                                "Multiple verity %s partitions found for verity %s partition with VerityMatchKey=%s",
+                                                verity_mode_to_string(mode),
+                                                verity_mode_to_string(p->verity),
+                                                p->verity_match_key);
                         else if (r < 0)
-                                return log_syntax(NULL, LOG_ERR, p->definition_path, 1, r,
-                                                  "Failed to find verity %s partition for verity %s partition with VerityMatchKey=%s",
-                                                  verity_mode_to_string(mode), verity_mode_to_string(p->verity), p->verity_match_key);
+                                return log_syntax(
+                                                NULL,
+                                                LOG_ERR,
+                                                p->definition_path,
+                                                1,
+                                                r,
+                                                "Failed to find verity %s partition for verity %s partition with VerityMatchKey=%s",
+                                                verity_mode_to_string(mode),
+                                                verity_mode_to_string(p->verity),
+                                                p->verity_match_key);
 
                         if (q) {
                                 if (q->priority != p->priority)
-                                        return log_syntax(NULL, LOG_ERR, p->definition_path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                                          "Priority mismatch (%i != %i) for verity sibling partitions with VerityMatchKey=%s",
-                                                          p->priority, q->priority, p->verity_match_key);
+                                        return log_syntax(
+                                                        NULL,
+                                                        LOG_ERR,
+                                                        p->definition_path,
+                                                        1,
+                                                        SYNTHETIC_ERRNO(EINVAL),
+                                                        "Priority mismatch (%i != %i) for verity sibling partitions with VerityMatchKey=%s",
+                                                        p->priority,
+                                                        q->priority,
+                                                        p->verity_match_key);
 
                                 p->siblings[mode] = q;
                         }
@@ -2225,10 +2464,14 @@ static int context_read_definitions(Context *context) {
                 assert_se(dp = p->siblings[VERITY_DATA]);
 
                 if (dp->minimize == MINIMIZE_OFF && !(dp->copy_blocks_path || dp->copy_blocks_auto))
-                        return log_syntax(NULL, LOG_ERR, p->definition_path, 1, SYNTHETIC_ERRNO(EINVAL),
-                                          "Minimize= set for verity hash partition but data partition does "
-                                          "not set CopyBlocks= or Minimize=");
-
+                        return log_syntax(
+                                        NULL,
+                                        LOG_ERR,
+                                        p->definition_path,
+                                        1,
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Minimize= set for verity hash partition but data partition does "
+                                        "not set CopyBlocks= or Minimize=");
         }
 
         return 0;
@@ -2241,11 +2484,11 @@ static int fdisk_ask_cb(struct fdisk_context *c, struct fdisk_ask *ask, void *da
         if (fdisk_ask_get_type(ask) != FDISK_ASKTYPE_STRING)
                 return -EINVAL;
 
-        ids = new(char, SD_ID128_UUID_STRING_MAX);
+        ids = new (char, SD_ID128_UUID_STRING_MAX);
         if (!ids)
                 return -ENOMEM;
 
-        r = fdisk_ask_string_set_result(ask, sd_id128_to_uuid_string(*(sd_id128_t*) data, ids));
+        r = fdisk_ask_string_set_result(ask, sd_id128_to_uuid_string(*(sd_id128_t *) data, ids));
         if (r < 0)
                 return r;
 
@@ -2383,9 +2626,10 @@ static int context_load_partition_table(Context *context) {
 
         if (context->backing_fd < 0) {
                 /* If we have no fd referencing the device yet, make a copy of the fd now, so that we have one */
-                r = context_open_and_lock_backing_fd(FORMAT_PROC_FD_PATH(fdisk_get_devfd(c)),
-                                                     arg_dry_run ? LOCK_SH : LOCK_EX,
-                                                     &context->backing_fd);
+                r = context_open_and_lock_backing_fd(
+                                FORMAT_PROC_FD_PATH(fdisk_get_devfd(c)),
+                                arg_dry_run ? LOCK_SH : LOCK_EX,
+                                &context->backing_fd);
                 if (r < 0)
                         return r;
         }
@@ -2399,7 +2643,10 @@ static int context_load_partition_table(Context *context) {
 
         /* Insist on a power of two, and that it's a multiple of 512, i.e. the traditional sector size. */
         if (secsz < 512 || !ISPOWEROF2(secsz))
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Sector size %lu is not a power of two larger than 512? Refusing.", secsz);
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Sector size %lu is not a power of two larger than 512? Refusing.",
+                                secsz);
 
         /* Use at least 4K, and ensure it's a multiple of the sector size, regardless if that is smaller or
          * larger */
@@ -2412,7 +2659,10 @@ static int context_load_partition_table(Context *context) {
         case EMPTY_REFUSE:
                 /* Refuse empty disks, insist on an existing GPT partition table */
                 if (!fdisk_is_labeltype(c, FDISK_DISKLABEL_GPT))
-                        return log_notice_errno(SYNTHETIC_ERRNO(EHWPOISON), "Disk %s has no GPT disk label, not repartitioning.", context->node);
+                        return log_notice_errno(
+                                        SYNTHETIC_ERRNO(EHWPOISON),
+                                        "Disk %s has no GPT disk label, not repartitioning.",
+                                        context->node);
 
                 break;
 
@@ -2420,9 +2670,15 @@ static int context_load_partition_table(Context *context) {
                 /* Require an empty disk, refuse any existing partition table */
                 r = fdisk_has_label(c);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to determine whether disk %s has a disk label: %m", context->node);
+                        return log_error_errno(
+                                        r,
+                                        "Failed to determine whether disk %s has a disk label: %m",
+                                        context->node);
                 if (r > 0)
-                        return log_notice_errno(SYNTHETIC_ERRNO(EHWPOISON), "Disk %s already has a disk label, refusing.", context->node);
+                        return log_notice_errno(
+                                        SYNTHETIC_ERRNO(EHWPOISON),
+                                        "Disk %s already has a disk label, refusing.",
+                                        context->node);
 
                 from_scratch = true;
                 break;
@@ -2431,10 +2687,16 @@ static int context_load_partition_table(Context *context) {
                 /* Allow both an empty disk and an existing partition table, but only GPT */
                 r = fdisk_has_label(c);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to determine whether disk %s has a disk label: %m", context->node);
+                        return log_error_errno(
+                                        r,
+                                        "Failed to determine whether disk %s has a disk label: %m",
+                                        context->node);
                 if (r > 0) {
                         if (!fdisk_is_labeltype(c, FDISK_DISKLABEL_GPT))
-                                return log_notice_errno(SYNTHETIC_ERRNO(EHWPOISON), "Disk %s has non-GPT disk label, not repartitioning.", context->node);
+                                return log_notice_errno(
+                                                SYNTHETIC_ERRNO(EHWPOISON),
+                                                "Disk %s has non-GPT disk label, not repartitioning.",
+                                                context->node);
                 } else
                         from_scratch = true;
 
@@ -2504,10 +2766,11 @@ static int context_load_partition_table(Context *context) {
                 if (fdisk_partition_is_used(p) <= 0)
                         continue;
 
-                if (fdisk_partition_has_start(p) <= 0 ||
-                    fdisk_partition_has_size(p) <= 0 ||
+                if (fdisk_partition_has_start(p) <= 0 || fdisk_partition_has_size(p) <= 0 ||
                     fdisk_partition_has_partno(p) <= 0)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Found a partition without a position, size or number.");
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Found a partition without a position, size or number.");
 
                 r = fdisk_partition_get_type_as_id128(p, &ptid);
                 if (r < 0)
@@ -2525,11 +2788,11 @@ static int context_load_partition_table(Context *context) {
                 }
 
                 sz = fdisk_partition_get_size(p);
-                assert(sz <= UINT64_MAX/secsz);
+                assert(sz <= UINT64_MAX / secsz);
                 sz *= secsz;
 
                 start = fdisk_partition_get_start(p);
-                assert(start <= UINT64_MAX/secsz);
+                assert(start <= UINT64_MAX / secsz);
                 start *= secsz;
 
                 partno = fdisk_partition_get_partno(p);
@@ -2605,17 +2868,17 @@ static int context_load_partition_table(Context *context) {
 
 add_initial_free_area:
         nsectors = fdisk_get_nsectors(c);
-        assert(nsectors <= UINT64_MAX/secsz);
+        assert(nsectors <= UINT64_MAX / secsz);
         nsectors *= secsz;
 
         first_lba = fdisk_get_first_lba(c);
-        assert(first_lba <= UINT64_MAX/secsz);
+        assert(first_lba <= UINT64_MAX / secsz);
         first_lba *= secsz;
 
         last_lba = fdisk_get_last_lba(c);
         assert(last_lba < UINT64_MAX);
         last_lba++;
-        assert(last_lba <= UINT64_MAX/secsz);
+        assert(last_lba <= UINT64_MAX / secsz);
         last_lba *= secsz;
 
         assert(last_lba >= first_lba);
@@ -2715,7 +2978,11 @@ static int format_size_change(uint64_t from, uint64_t to, char **ret) {
                 if (from == to || to == UINT64_MAX)
                         t = strdup(FORMAT_BYTES(from));
                 else
-                        t = strjoin(FORMAT_BYTES(from), " ", special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), " ", FORMAT_BYTES(to));
+                        t = strjoin(FORMAT_BYTES(from),
+                                    " ",
+                                    special_glyph(SPECIAL_GLYPH_ARROW_RIGHT),
+                                    " ",
+                                    FORMAT_BYTES(to));
         } else if (to != UINT64_MAX)
                 t = strjoin(special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), " ", FORMAT_BYTES(to));
         else {
@@ -2776,14 +3043,37 @@ static int context_dump_partitions(Context *context) {
 
         if (!DEBUG_LOGGING) {
                 if (arg_json_format_flags & JSON_FORMAT_OFF)
-                        (void) table_set_display(t, (size_t) 0, (size_t) 1, (size_t) 2, (size_t) 3, (size_t) 4,
-                                                    (size_t) 8, (size_t) 9, (size_t) 12, roothash_col, dropin_files_col,
-                                                    split_path_col);
+                        (void) table_set_display(
+                                        t,
+                                        (size_t) 0,
+                                        (size_t) 1,
+                                        (size_t) 2,
+                                        (size_t) 3,
+                                        (size_t) 4,
+                                        (size_t) 8,
+                                        (size_t) 9,
+                                        (size_t) 12,
+                                        roothash_col,
+                                        dropin_files_col,
+                                        split_path_col);
                 else
-                        (void) table_set_display(t, (size_t) 0, (size_t) 1, (size_t) 2, (size_t) 3, (size_t) 4,
-                                                    (size_t) 5, (size_t) 6, (size_t) 7, (size_t) 8, (size_t) 10,
-                                                    (size_t) 11, (size_t) 13, roothash_col, dropin_files_col,
-                                                    split_path_col);
+                        (void) table_set_display(
+                                        t,
+                                        (size_t) 0,
+                                        (size_t) 1,
+                                        (size_t) 2,
+                                        (size_t) 3,
+                                        (size_t) 4,
+                                        (size_t) 5,
+                                        (size_t) 6,
+                                        (size_t) 7,
+                                        (size_t) 8,
+                                        (size_t) 10,
+                                        (size_t) 11,
+                                        (size_t) 13,
+                                        roothash_col,
+                                        dropin_files_col,
+                                        split_path_col);
         }
 
         (void) table_set_align_percent(t, table_get_cell(t, 0, 5), 100);
@@ -2808,7 +3098,7 @@ static int context_dump_partitions(Context *context) {
                         activity = "resize";
 
                 label = partition_label(p);
-                partname = p->partno != UINT64_MAX ? fdisk_partname(context->node, p->partno+1) : NULL;
+                partname = p->partno != UINT64_MAX ? fdisk_partname(context->node, p->partno + 1) : NULL;
 
                 r = format_size_change(p->current_size, p->new_size, &size_change);
                 if (r < 0)
@@ -2826,30 +3116,59 @@ static int context_dump_partitions(Context *context) {
                 if (p->verity != VERITY_OFF) {
                         Partition *hp = p->verity == VERITY_HASH ? p : p->siblings[VERITY_HASH];
 
-                        rh = iovec_is_set(&hp->roothash) ? hexmem(hp->roothash.iov_base, hp->roothash.iov_len) : strdup("TBD");
+                        rh = iovec_is_set(&hp->roothash) ?
+                                        hexmem(hp->roothash.iov_base, hp->roothash.iov_len) :
+                                        strdup("TBD");
                         if (!rh)
                                 return log_oom();
                 }
 
                 r = table_add_many(
                                 t,
-                                TABLE_STRING, gpt_partition_type_uuid_to_string_harder(p->type.uuid, uuid_buffer),
-                                TABLE_STRING, empty_to_null(label) ?: "-", TABLE_SET_COLOR, empty_to_null(label) ? NULL : ansi_grey(),
-                                TABLE_UUID, p->new_uuid_is_set ? p->new_uuid : p->current_uuid,
-                                TABLE_UINT64, p->partno,
-                                TABLE_PATH_BASENAME, p->definition_path, TABLE_SET_COLOR, p->definition_path ? NULL : ansi_grey(),
-                                TABLE_STRING, partname ?: "-", TABLE_SET_COLOR, partname ? NULL : ansi_highlight(),
-                                TABLE_UINT64, p->offset,
-                                TABLE_UINT64, p->current_size == UINT64_MAX ? 0 : p->current_size,
-                                TABLE_UINT64, p->new_size,
-                                TABLE_STRING, size_change, TABLE_SET_COLOR, !p->partitions_next && sum_size > 0 ? ansi_underline() : NULL,
-                                TABLE_UINT64, p->current_padding == UINT64_MAX ? 0 : p->current_padding,
-                                TABLE_UINT64, p->new_padding,
-                                TABLE_STRING, padding_change, TABLE_SET_COLOR, !p->partitions_next && sum_padding > 0 ? ansi_underline() : NULL,
-                                TABLE_STRING, activity ?: "unchanged",
-                                TABLE_STRING, rh,
-                                TABLE_STRV, p->drop_in_files,
-                                TABLE_STRING, empty_to_null(p->split_path) ?: "-");
+                                TABLE_STRING,
+                                gpt_partition_type_uuid_to_string_harder(p->type.uuid, uuid_buffer),
+                                TABLE_STRING,
+                                empty_to_null(label) ?: "-",
+                                TABLE_SET_COLOR,
+                                empty_to_null(label) ? NULL : ansi_grey(),
+                                TABLE_UUID,
+                                p->new_uuid_is_set ? p->new_uuid : p->current_uuid,
+                                TABLE_UINT64,
+                                p->partno,
+                                TABLE_PATH_BASENAME,
+                                p->definition_path,
+                                TABLE_SET_COLOR,
+                                p->definition_path ? NULL : ansi_grey(),
+                                TABLE_STRING,
+                                partname ?: "-",
+                                TABLE_SET_COLOR,
+                                partname ? NULL : ansi_highlight(),
+                                TABLE_UINT64,
+                                p->offset,
+                                TABLE_UINT64,
+                                p->current_size == UINT64_MAX ? 0 : p->current_size,
+                                TABLE_UINT64,
+                                p->new_size,
+                                TABLE_STRING,
+                                size_change,
+                                TABLE_SET_COLOR,
+                                !p->partitions_next && sum_size > 0 ? ansi_underline() : NULL,
+                                TABLE_UINT64,
+                                p->current_padding == UINT64_MAX ? 0 : p->current_padding,
+                                TABLE_UINT64,
+                                p->new_padding,
+                                TABLE_STRING,
+                                padding_change,
+                                TABLE_SET_COLOR,
+                                !p->partitions_next && sum_padding > 0 ? ansi_underline() : NULL,
+                                TABLE_STRING,
+                                activity ?: "unchanged",
+                                TABLE_STRING,
+                                rh,
+                                TABLE_STRV,
+                                p->drop_in_files,
+                                TABLE_STRING,
+                                empty_to_null(p->split_path) ?: "-");
                 if (r < 0)
                         return table_log_add_error(r);
 
@@ -2875,10 +3194,12 @@ static int context_dump_partitions(Context *context) {
                                 TABLE_EMPTY,
                                 TABLE_EMPTY,
                                 TABLE_EMPTY,
-                                TABLE_STRING, a,
+                                TABLE_STRING,
+                                a,
                                 TABLE_EMPTY,
                                 TABLE_EMPTY,
-                                TABLE_STRING, b,
+                                TABLE_STRING,
+                                b,
                                 TABLE_EMPTY,
                                 TABLE_EMPTY,
                                 TABLE_EMPTY,
@@ -2967,7 +3288,7 @@ static int partition_hint(const Partition *p, const char *node, char **ret) {
         }
 
         if (p->partno != UINT64_MAX) {
-                buf = fdisk_partname(node, p->partno+1);
+                buf = fdisk_partname(node, p->partno + 1);
                 goto done;
         }
 
@@ -2998,7 +3319,7 @@ static int context_dump_partition_bar(Context *context) {
         assert_se((c = columns()) >= 2);
         c -= 2; /* We do not use the leftmost and rightmost character cell */
 
-        bar = new0(Partition*, c);
+        bar = new0(Partition *, c);
         if (!bar)
                 return log_oom();
 
@@ -3032,7 +3353,7 @@ static int context_dump_partition_bar(Context *context) {
         for (size_t i = 0; i < context->n_partitions; i++) {
                 _cleanup_free_ char **line = NULL;
 
-                line = new0(char*, c);
+                line = new0(char *, c);
                 if (!line)
                         return log_oom();
 
@@ -3043,11 +3364,12 @@ static int context_dump_partition_bar(Context *context) {
 
                         if (i < context->n_partitions - j) {
 
-                                if (line[start_array[j-1]]) {
+                                if (line[start_array[j - 1]]) {
                                         const char *e;
 
                                         /* Upgrade final corner to the right with a branch to the right */
-                                        e = startswith(line[start_array[j-1]], special_glyph(SPECIAL_GLYPH_TREE_RIGHT));
+                                        e = startswith(line[start_array[j - 1]],
+                                                       special_glyph(SPECIAL_GLYPH_TREE_RIGHT));
                                         if (e) {
                                                 d = strjoin(special_glyph(SPECIAL_GLYPH_TREE_BRANCH), e);
                                                 if (!d)
@@ -3066,7 +3388,8 @@ static int context_dump_partition_bar(Context *context) {
 
                                 (void) partition_hint(p, context->node, &hint);
 
-                                if (streq_ptr(line[start_array[j-1]], special_glyph(SPECIAL_GLYPH_TREE_VERTICAL)))
+                                if (streq_ptr(line[start_array[j - 1]],
+                                              special_glyph(SPECIAL_GLYPH_TREE_VERTICAL)))
                                         d = strjoin(special_glyph(SPECIAL_GLYPH_TREE_BRANCH), " ", strna(hint));
                                 else
                                         d = strjoin(special_glyph(SPECIAL_GLYPH_TREE_RIGHT), " ", strna(hint));
@@ -3076,7 +3399,7 @@ static int context_dump_partition_bar(Context *context) {
                         }
 
                         if (d)
-                                free_and_replace(line[start_array[j-1]], d);
+                                free_and_replace(line[start_array[j - 1]], d);
                 }
 
                 putc(' ', stdout);
@@ -3181,14 +3504,17 @@ static int context_wipe_range(Context *context, uint64_t offset, uint64_t size) 
         errno = 0;
         r = blkid_probe_set_device(probe, fdisk_get_devfd(context->fdisk_context), offset, size);
         if (r < 0)
-                return log_error_errno(errno ?: SYNTHETIC_ERRNO(EIO), "Failed to allocate device probe for wiping.");
+                return log_error_errno(
+                                errno ?: SYNTHETIC_ERRNO(EIO), "Failed to allocate device probe for wiping.");
 
         errno = 0;
         if (blkid_probe_enable_superblocks(probe, true) < 0 ||
-            blkid_probe_set_superblocks_flags(probe, BLKID_SUBLKS_MAGIC|BLKID_SUBLKS_BADCSUM) < 0 ||
+            blkid_probe_set_superblocks_flags(probe, BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_BADCSUM) < 0 ||
             blkid_probe_enable_partitions(probe, true) < 0 ||
             blkid_probe_set_partitions_flags(probe, BLKID_PARTS_MAGIC) < 0)
-                return log_error_errno(errno ?: SYNTHETIC_ERRNO(EIO), "Failed to enable superblock and partition probing.");
+                return log_error_errno(
+                                errno ?: SYNTHETIC_ERRNO(EIO),
+                                "Failed to enable superblock and partition probing.");
 
         for (;;) {
                 errno = 0;
@@ -3224,10 +3550,7 @@ static int context_wipe_partition(Context *context, Partition *p) {
         return 0;
 }
 
-static int context_discard_range(
-                Context *context,
-                uint64_t offset,
-                uint64_t size) {
+static int context_discard_range(Context *context, uint64_t offset, uint64_t size) {
 
         struct stat st;
         int fd;
@@ -3245,7 +3568,7 @@ static int context_discard_range(
                 return -errno;
 
         if (S_ISREG(st.st_mode)) {
-                if (fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, offset, size) < 0) {
+                if (fallocate(fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, offset, size) < 0) {
                         if (ERRNO_IS_NOT_SUPPORTED(errno))
                                 return -EOPNOTSUPP;
 
@@ -3299,12 +3622,16 @@ static int context_discard_partition(Context *context, Partition *p) {
 
         r = context_discard_range(context, p->offset, p->new_size);
         if (r == -EOPNOTSUPP) {
-                log_info("Storage does not support discard, not discarding data in future partition %" PRIu64 ".", p->partno);
+                log_info("Storage does not support discard, not discarding data in future partition %" PRIu64
+                         ".",
+                         p->partno);
                 return 0;
         }
         if (r == -EBUSY) {
                 /* Let's handle this gracefully: https://bugzilla.kernel.org/show_bug.cgi?id=211167 */
-                log_info("Block device is busy, not discarding partition %" PRIu64 " because it probably is mounted.", p->partno);
+                log_info("Block device is busy, not discarding partition %" PRIu64
+                         " because it probably is mounted.",
+                         p->partno);
                 return 0;
         }
         if (r == 0) {
@@ -3312,7 +3639,8 @@ static int context_discard_partition(Context *context, Partition *p) {
                 return 0;
         }
         if (r < 0)
-                return log_error_errno(r, "Failed to discard data for future partition %" PRIu64 ".", p->partno);
+                return log_error_errno(
+                                r, "Failed to discard data for future partition %" PRIu64 ".", p->partno);
 
         log_info("Successfully discarded data from future partition %" PRIu64 ".", p->partno);
         return 1;
@@ -3361,16 +3689,19 @@ static int context_discard_gap_after(Context *context, Partition *p) {
         r = context_discard_range(context, gap, next - gap);
         if (r == -EOPNOTSUPP) {
                 if (p)
-                        log_info("Storage does not support discard, not discarding gap after partition %" PRIu64 ".", p->partno);
+                        log_info("Storage does not support discard, not discarding gap after partition %" PRIu64
+                                 ".",
+                                 p->partno);
                 else
                         log_info("Storage does not support discard, not discarding gap at beginning of disk.");
                 return 0;
         }
-        if (r == 0)  /* Too short */
+        if (r == 0) /* Too short */
                 return 0;
         if (r < 0) {
                 if (p)
-                        return log_error_errno(r, "Failed to discard gap after partition %" PRIu64 ".", p->partno);
+                        return log_error_errno(
+                                        r, "Failed to discard gap after partition %" PRIu64 ".", p->partno);
                 else
                         return log_error_errno(r, "Failed to discard gap at beginning of disk.");
         }
@@ -3434,7 +3765,7 @@ typedef struct DecryptedPartitionTarget {
         struct crypt_device *device;
 } DecryptedPartitionTarget;
 
-static DecryptedPartitionTarget* decrypted_partition_target_free(DecryptedPartitionTarget *t) {
+static DecryptedPartitionTarget *decrypted_partition_target_free(DecryptedPartitionTarget *t) {
 #if HAVE_LIBCRYPTSETUP
         int r;
 
@@ -3481,7 +3812,7 @@ static int partition_target_fd(PartitionTarget *t) {
         return t->whole_fd;
 }
 
-static const char* partition_target_path(PartitionTarget *t) {
+static const char *partition_target_path(PartitionTarget *t) {
         assert(t);
         assert(t->loop || t->path);
 
@@ -3506,7 +3837,7 @@ static PartitionTarget *partition_target_free(PartitionTarget *t) {
         return mfree(t);
 }
 
-DEFINE_TRIVIAL_CLEANUP_FUNC(PartitionTarget*, partition_target_free);
+DEFINE_TRIVIAL_CLEANUP_FUNC(PartitionTarget *, partition_target_free);
 
 static int prepare_temporary_file(PartitionTarget *t, uint64_t size) {
         _cleanup_(unlink_and_freep) char *temp = NULL;
@@ -3529,8 +3860,8 @@ static int prepare_temporary_file(PartitionTarget *t, uint64_t size) {
                 return log_error_errno(fd, "Failed to create temporary file: %m");
 
         if (ftruncate(fd, size) < 0)
-                return log_error_errno(errno, "Failed to truncate temporary file to %s: %m",
-                                       FORMAT_BYTES(size));
+                return log_error_errno(
+                                errno, "Failed to truncate temporary file to %s: %m", FORMAT_BYTES(size));
 
         t->fd = TAKE_FD(fd);
         t->path = TAKE_PTR(temp);
@@ -3539,11 +3870,7 @@ static int prepare_temporary_file(PartitionTarget *t, uint64_t size) {
 }
 
 static int partition_target_prepare(
-                Context *context,
-                Partition *p,
-                uint64_t size,
-                bool need_path,
-                PartitionTarget **ret) {
+                Context *context, Partition *p, uint64_t size, bool need_path, PartitionTarget **ret) {
 
         _cleanup_(partition_target_freep) PartitionTarget *t = NULL;
         _cleanup_(loop_device_unrefp) LoopDevice *d = NULL;
@@ -3555,10 +3882,10 @@ static int partition_target_prepare(
 
         assert_se((whole_fd = fdisk_get_devfd(context->fdisk_context)) >= 0);
 
-        t = new(PartitionTarget, 1);
+        t = new (PartitionTarget, 1);
         if (!t)
                 return log_oom();
-        *t = (PartitionTarget) {
+        *t = (PartitionTarget){
                 .fd = -EBADF,
                 .whole_fd = -EBADF,
         };
@@ -3614,8 +3941,11 @@ static int partition_target_grow(PartitionTarget *t, uint64_t size) {
                         return log_error_errno(r, "Failed to refresh loopback device size: %m");
         } else if (t->fd >= 0) {
                 if (ftruncate(t->fd, size) < 0)
-                        return log_error_errno(errno, "Failed to grow '%s' to %s by truncation: %m",
-                                               t->path, FORMAT_BYTES(size));
+                        return log_error_errno(
+                                        errno,
+                                        "Failed to grow '%s' to %s by truncation: %m",
+                                        t->path,
+                                        FORMAT_BYTES(size));
         }
 
         return 0;
@@ -3650,11 +3980,15 @@ static int partition_target_sync(Context *context, Partition *p, PartitionTarget
                         return log_error_errno(errno, "Failed to stat temporary file: %m");
 
                 if (st.st_size > (off_t) p->new_size)
-                        return log_error_errno(SYNTHETIC_ERRNO(ENOSPC),
-                                               "Partition %" PRIu64 "'s contents (%s) don't fit in the partition (%s)",
-                                               p->partno, FORMAT_BYTES(st.st_size), FORMAT_BYTES(p->new_size));
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(ENOSPC),
+                                        "Partition %" PRIu64
+                                        "'s contents (%s) don't fit in the partition (%s)",
+                                        p->partno,
+                                        FORMAT_BYTES(st.st_size),
+                                        FORMAT_BYTES(p->new_size));
 
-                r = copy_bytes(t->fd, whole_fd, UINT64_MAX, COPY_REFLINK|COPY_HOLES|COPY_FSYNC);
+                r = copy_bytes(t->fd, whole_fd, UINT64_MAX, COPY_REFLINK | COPY_HOLES | COPY_FSYNC);
                 if (r < 0)
                         return log_error_errno(r, "Failed to copy bytes to partition: %m");
         } else {
@@ -3666,7 +4000,8 @@ static int partition_target_sync(Context *context, Partition *p, PartitionTarget
 }
 
 static int partition_encrypt(Context *context, Partition *p, PartitionTarget *target, bool offline) {
-#if HAVE_LIBCRYPTSETUP && HAVE_CRYPT_SET_DATA_OFFSET && HAVE_CRYPT_REENCRYPT_INIT_BY_PASSPHRASE && HAVE_CRYPT_REENCRYPT
+#if HAVE_LIBCRYPTSETUP && HAVE_CRYPT_SET_DATA_OFFSET && HAVE_CRYPT_REENCRYPT_INIT_BY_PASSPHRASE && \
+                HAVE_CRYPT_REENCRYPT
         const char *node = partition_target_path(target);
         struct crypt_params_luks2 luks_params = {
                 .label = strempty(ASSERT_PTR(p)->new_label),
@@ -3679,7 +4014,7 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                 .resilience = "datashift",
                 .data_shift = LUKS2_METADATA_SIZE / 512,
                 .luks2 = &luks_params,
-                .flags = CRYPT_REENCRYPT_INITIALIZE_ONLY|CRYPT_REENCRYPT_MOVE_FIRST_SEGMENT,
+                .flags = CRYPT_REENCRYPT_INITIALIZE_ONLY | CRYPT_REENCRYPT_MOVE_FIRST_SEGMENT,
         };
         _cleanup_(sym_crypt_freep) struct crypt_device *cd = NULL;
         _cleanup_(erase_and_freep) char *base64_encoded = NULL;
@@ -3759,12 +4094,7 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
 
         if (IN_SET(p->encrypt, ENCRYPT_KEY_FILE, ENCRYPT_KEY_FILE_TPM2)) {
                 r = sym_crypt_keyslot_add_by_volume_key(
-                                cd,
-                                CRYPT_ANY_SLOT,
-                                NULL,
-                                VOLUME_KEY_SIZE,
-                                strempty(arg_key),
-                                arg_key_size);
+                                cd, CRYPT_ANY_SLOT, NULL, VOLUME_KEY_SIZE, strempty(arg_key), arg_key_size);
                 if (r < 0)
                         return log_error_errno(r, "Failed to add LUKS2 key: %m");
 
@@ -3789,7 +4119,8 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                                 if (arg_tpm2_public_key || r != -ENOENT)
                                         return log_error_errno(r, "Failed to read TPM PCR public key: %m");
 
-                                log_debug_errno(r, "Failed to read TPM2 PCR public key, proceeding without: %m");
+                                log_debug_errno(r,
+                                                "Failed to read TPM2 PCR public key, proceeding without: %m");
                                 arg_tpm2_public_key_pcr_mask = 0;
                         }
                 }
@@ -3817,16 +4148,22 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                         if (r < 0)
                                 return r;
 
-                        if (!tpm2_pcr_values_has_all_values(arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values))
-                                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                                       "Must provide all PCR values when using TPM2 device key.");
+                        if (!tpm2_pcr_values_has_all_values(
+                                            arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values))
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EINVAL),
+                                                "Must provide all PCR values when using TPM2 device key.");
                 } else {
                         r = tpm2_context_new(arg_tpm2_device, &tpm2_context);
                         if (r < 0)
                                 return log_error_errno(r, "Failed to create TPM2 context: %m");
 
-                        if (!tpm2_pcr_values_has_all_values(arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values)) {
-                                r = tpm2_pcr_read_missing_values(tpm2_context, arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values);
+                        if (!tpm2_pcr_values_has_all_values(
+                                            arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values)) {
+                                r = tpm2_pcr_read_missing_values(
+                                                tpm2_context,
+                                                arg_tpm2_hash_pcr_values,
+                                                arg_tpm2_n_hash_pcr_values);
                                 if (r < 0)
                                         return log_error_errno(r, "Could not read pcr values: %m");
                         }
@@ -3836,7 +4173,8 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                 uint32_t hash_pcr_mask = 0;
                 if (arg_tpm2_n_hash_pcr_values > 0) {
                         size_t hash_count;
-                        r = tpm2_pcr_values_hash_count(arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values, &hash_count);
+                        r = tpm2_pcr_values_hash_count(
+                                        arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values, &hash_count);
                         if (r < 0)
                                 return log_error_errno(r, "Could not get hash count: %m");
 
@@ -3844,7 +4182,11 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Multiple PCR banks selected.");
 
                         hash_pcr_bank = arg_tpm2_hash_pcr_values[0].hash;
-                        r = tpm2_pcr_values_to_mask(arg_tpm2_hash_pcr_values, arg_tpm2_n_hash_pcr_values, hash_pcr_bank, &hash_pcr_mask);
+                        r = tpm2_pcr_values_to_mask(
+                                        arg_tpm2_hash_pcr_values,
+                                        arg_tpm2_n_hash_pcr_values,
+                                        hash_pcr_bank,
+                                        &hash_pcr_mask);
                         if (r < 0)
                                 return log_error_errno(r, "Could not get hash mask: %m");
                 }
@@ -3923,10 +4265,9 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
 
                 passphrase = base64_encoded;
                 passphrase_size = strlen(base64_encoded);
-#else
-                return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP),
-                                       "Support for TPM2 enrollment not enabled.");
-#endif
+#        else
+                return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "Support for TPM2 enrollment not enabled.");
+#        endif
         }
 
         if (offline) {
@@ -3960,15 +4301,7 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                 reencrypt_params.flags &= ~CRYPT_REENCRYPT_INITIALIZE_ONLY;
 
                 r = sym_crypt_reencrypt_init_by_passphrase(
-                                cd,
-                                NULL,
-                                passphrase,
-                                passphrase_size,
-                                CRYPT_ANY_SLOT,
-                                0,
-                                NULL,
-                                NULL,
-                                &reencrypt_params);
+                                cd, NULL, passphrase, passphrase_size, CRYPT_ANY_SLOT, 0, NULL, NULL, &reencrypt_params);
                 if (r < 0)
                         return log_error_errno(r, "Failed to load reencryption context: %m");
 
@@ -3988,18 +4321,18 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
                 if (r < 0)
                         return log_error_errno(r, "Failed to activate LUKS superblock: %m");
 
-                dev_fd = open(vol, O_RDWR|O_CLOEXEC|O_NOCTTY);
+                dev_fd = open(vol, O_RDWR | O_CLOEXEC | O_NOCTTY);
                 if (dev_fd < 0)
                         return log_error_errno(errno, "Failed to open LUKS volume '%s': %m", vol);
 
                 if (flock(dev_fd, LOCK_EX) < 0)
                         return log_error_errno(errno, "Failed to lock '%s': %m", vol);
 
-                t = new(DecryptedPartitionTarget, 1);
+                t = new (DecryptedPartitionTarget, 1);
                 if (!t)
                         return log_oom();
 
-                *t = (DecryptedPartitionTarget) {
+                *t = (DecryptedPartitionTarget){
                         .fd = TAKE_FD(dev_fd),
                         .dm_name = TAKE_PTR(dm_name),
                         .volume = TAKE_PTR(vol),
@@ -4013,16 +4346,13 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
 
         return 0;
 #else
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP),
-                               "libcryptsetup is not supported or is missing required symbols, cannot encrypt: %m");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOPNOTSUPP),
+                        "libcryptsetup is not supported or is missing required symbols, cannot encrypt: %m");
 #endif
 }
 
-static int partition_format_verity_hash(
-                Context *context,
-                Partition *p,
-                const char *node,
-                const char *data_node) {
+static int partition_format_verity_hash(Context *context, Partition *p, const char *node, const char *data_node) {
 
 #if HAVE_LIBCRYPTSETUP
         Partition *dp;
@@ -4056,7 +4386,7 @@ static int partition_format_verity_hash(
                 return log_error_errno(r, "libcryptsetup not found, cannot setup verity: %m");
 
         if (!node) {
-                r = partition_target_prepare(context, p, p->new_size, /*need_path=*/ true, &t);
+                r = partition_target_prepare(context, p, p->new_size, /*need_path=*/true, &t);
                 if (r < 0)
                         return r;
 
@@ -4075,25 +4405,33 @@ static int partition_format_verity_hash(
         cryptsetup_enable_logging(cd);
 
         r = sym_crypt_format(
-                        cd, CRYPT_VERITY, NULL, NULL, SD_ID128_TO_UUID_STRING(p->verity_uuid), NULL, 0,
+                        cd,
+                        CRYPT_VERITY,
+                        NULL,
+                        NULL,
+                        SD_ID128_TO_UUID_STRING(p->verity_uuid),
+                        NULL,
+                        0,
                         &(struct crypt_params_verity){
-                                .data_device = data_node,
-                                .flags = CRYPT_VERITY_CREATE_HASH,
-                                .hash_name = "sha256",
-                                .hash_type = 1,
-                                .data_block_size = p->verity_data_block_size,
-                                .hash_block_size = p->verity_hash_block_size,
-                                .salt_size = sizeof(p->verity_salt),
-                                .salt = (const char*)p->verity_salt,
+                                        .data_device = data_node,
+                                        .flags = CRYPT_VERITY_CREATE_HASH,
+                                        .hash_name = "sha256",
+                                        .hash_type = 1,
+                                        .data_block_size = p->verity_data_block_size,
+                                        .hash_block_size = p->verity_hash_block_size,
+                                        .salt_size = sizeof(p->verity_salt),
+                                        .salt = (const char *) p->verity_salt,
                         });
         if (r < 0) {
                 /* libcryptsetup reports non-descriptive EIO errors for every I/O failure. Luckily, it
                  * doesn't clobber errno so let's check for ENOSPC so we can report a better error if the
                  * partition is too small. */
                 if (r == -EIO && errno == ENOSPC)
-                        return log_error_errno(errno,
-                                               "Verity hash data does not fit in partition %s with size %s",
-                                               strna(hint), FORMAT_BYTES(p->new_size));
+                        return log_error_errno(
+                                        errno,
+                                        "Verity hash data does not fit in partition %s with size %s",
+                                        strna(hint),
+                                        FORMAT_BYTES(p->new_size));
 
                 return log_error_errno(r, "Failed to setup verity hash data of partition %s: %m", strna(hint));
         }
@@ -4106,7 +4444,10 @@ static int partition_format_verity_hash(
 
         r = sym_crypt_get_volume_key_size(cd);
         if (r < 0)
-                return log_error_errno(r, "Failed to determine verity root hash size of partition %s: %m", strna(hint));
+                return log_error_errno(
+                                r,
+                                "Failed to determine verity root hash size of partition %s: %m",
+                                strna(hint));
 
         _cleanup_(iovec_done) struct iovec rh = {
                 .iov_base = malloc(r),
@@ -4127,7 +4468,9 @@ static int partition_format_verity_hash(
         }
 
         if (!p->new_uuid_is_set) {
-                memcpy_safe(p->new_uuid.bytes, (uint8_t*) rh.iov_base + (rh.iov_len - sizeof(sd_id128_t)), sizeof(sd_id128_t));
+                memcpy_safe(p->new_uuid.bytes,
+                            (uint8_t *) rh.iov_base + (rh.iov_len - sizeof(sd_id128_t)),
+                            sizeof(sd_id128_t));
                 p->new_uuid_is_set = true;
         }
 
@@ -4135,13 +4478,13 @@ static int partition_format_verity_hash(
 
         return 0;
 #else
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "libcryptsetup is not supported, cannot setup verity hashes: %m");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOPNOTSUPP),
+                        "libcryptsetup is not supported, cannot setup verity hashes: %m");
 #endif
 }
 
-static int sign_verity_roothash(
-                const struct iovec *roothash,
-                struct iovec *ret_signature) {
+static int sign_verity_roothash(const struct iovec *roothash, struct iovec *ret_signature) {
 
 #if HAVE_OPENSSL
         _cleanup_(BIO_freep) BIO *rb = NULL;
@@ -4162,22 +4505,28 @@ static int sign_verity_roothash(
         if (!rb)
                 return log_oom();
 
-        p7 = PKCS7_sign(arg_certificate, arg_private_key, NULL, rb, PKCS7_DETACHED|PKCS7_NOATTR|PKCS7_BINARY);
+        p7 = PKCS7_sign(arg_certificate, arg_private_key, NULL, rb, PKCS7_DETACHED | PKCS7_NOATTR | PKCS7_BINARY);
         if (!p7)
-                return log_error_errno(SYNTHETIC_ERRNO(EIO), "Failed to calculate PKCS7 signature: %s",
-                                       ERR_error_string(ERR_get_error(), NULL));
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EIO),
+                                "Failed to calculate PKCS7 signature: %s",
+                                ERR_error_string(ERR_get_error(), NULL));
 
         sigsz = i2d_PKCS7(p7, &sig);
         if (sigsz < 0)
-                return log_error_errno(SYNTHETIC_ERRNO(EIO), "Failed to convert PKCS7 signature to DER: %s",
-                                       ERR_error_string(ERR_get_error(), NULL));
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EIO),
+                                "Failed to convert PKCS7 signature to DER: %s",
+                                ERR_error_string(ERR_get_error(), NULL));
 
         ret_signature->iov_base = TAKE_PTR(sig);
         ret_signature->iov_len = sigsz;
 
         return 0;
 #else
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "OpenSSL is not supported, cannot setup verity signature: %m");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOPNOTSUPP),
+                        "OpenSSL is not supported, cannot setup verity signature: %m");
 #endif
 }
 
@@ -4215,15 +4564,13 @@ static int partition_format_verity_sig(Context *context, Partition *p) {
                 return log_error_errno(r, "Unable to calculate X509 certificate fingerprint: %m");
 
         r = json_build(&v,
-                        JSON_BUILD_OBJECT(
-                                JSON_BUILD_PAIR("rootHash", JSON_BUILD_HEX(hp->roothash.iov_base, hp->roothash.iov_len)),
-                                JSON_BUILD_PAIR(
-                                        "certificateFingerprint",
-                                        JSON_BUILD_HEX(fp, sizeof(fp))
-                                ),
-                                JSON_BUILD_PAIR("signature", JSON_BUILD_IOVEC_BASE64(&sig))
-                        )
-        );
+                       JSON_BUILD_OBJECT(
+                                       JSON_BUILD_PAIR("rootHash",
+                                                       JSON_BUILD_HEX(hp->roothash.iov_base,
+                                                                      hp->roothash.iov_len)),
+                                       JSON_BUILD_PAIR("certificateFingerprint",
+                                                       JSON_BUILD_HEX(fp, sizeof(fp))),
+                                       JSON_BUILD_PAIR("signature", JSON_BUILD_IOVEC_BASE64(&sig))));
         if (r < 0)
                 return log_error_errno(r, "Failed to build verity signature JSON object: %m");
 
@@ -4231,7 +4578,7 @@ static int partition_format_verity_sig(Context *context, Partition *p) {
         if (r < 0)
                 return log_error_errno(r, "Failed to format verity signature JSON object: %m");
 
-        if (strlen(text)+1 > p->new_size)
+        if (strlen(text) + 1 > p->new_size)
                 return log_error_errno(SYNTHETIC_ERRNO(E2BIG), "Verity signature too long for partition: %m");
 
         r = strgrowpad0(&text, p->new_size);
@@ -4275,13 +4622,17 @@ static int context_copy_blocks(Context *context) {
 
                 assert(p->new_size != UINT64_MAX);
                 assert(p->copy_blocks_size != UINT64_MAX);
-                assert(p->new_size >= p->copy_blocks_size + (p->encrypt != ENCRYPT_OFF ? LUKS2_METADATA_KEEP_FREE : 0));
+                assert(p->new_size >=
+                       p->copy_blocks_size + (p->encrypt != ENCRYPT_OFF ? LUKS2_METADATA_KEEP_FREE : 0));
 
                 usec_t start_timestamp = now(CLOCK_MONOTONIC);
 
-                r = partition_target_prepare(context, p, p->new_size,
-                                             /*need_path=*/ p->encrypt != ENCRYPT_OFF || p->siblings[VERITY_HASH],
-                                             &t);
+                r = partition_target_prepare(
+                                context,
+                                p,
+                                p->new_size,
+                                /*need_path=*/p->encrypt != ENCRYPT_OFF || p->siblings[VERITY_HASH],
+                                &t);
                 if (r < 0)
                         return r;
 
@@ -4293,13 +4644,22 @@ static int context_copy_blocks(Context *context) {
 
                 if (p->copy_blocks_offset == UINT64_MAX)
                         log_info("Copying in '%s' (%s) on block level into future partition %" PRIu64 ".",
-                                 p->copy_blocks_path, FORMAT_BYTES(p->copy_blocks_size), p->partno);
+                                 p->copy_blocks_path,
+                                 FORMAT_BYTES(p->copy_blocks_size),
+                                 p->partno);
                 else {
-                        log_info("Copying in '%s' @ %" PRIu64 " (%s) on block level into future partition %" PRIu64 ".",
-                                 p->copy_blocks_path, p->copy_blocks_offset, FORMAT_BYTES(p->copy_blocks_size), p->partno);
+                        log_info("Copying in '%s' @ %" PRIu64
+                                 " (%s) on block level into future partition %" PRIu64 ".",
+                                 p->copy_blocks_path,
+                                 p->copy_blocks_offset,
+                                 FORMAT_BYTES(p->copy_blocks_size),
+                                 p->partno);
 
                         if (lseek(p->copy_blocks_fd, p->copy_blocks_offset, SEEK_SET) < 0)
-                                return log_error_errno(errno, "Failed to seek to copy blocks offset in %s: %m", p->copy_blocks_path);
+                                return log_error_errno(
+                                                errno,
+                                                "Failed to seek to copy blocks offset in %s: %m",
+                                                p->copy_blocks_path);
                 }
 
                 r = copy_bytes(p->copy_blocks_fd, partition_target_fd(t), p->copy_blocks_size, COPY_REFLINK);
@@ -4319,16 +4679,26 @@ static int context_copy_blocks(Context *context) {
                         return r;
 
                 usec_t time_spent = usec_sub_unsigned(now(CLOCK_MONOTONIC), start_timestamp);
-                if (time_spent > 250 * USEC_PER_MSEC) /* Show throughput, but not if we spent too little time on it, since it's just noise then */
-                        log_info("Block level copying and synchronization of partition %" PRIu64 " complete in %s (%s/s).",
-                                 p->partno, FORMAT_TIMESPAN(time_spent, 0), FORMAT_BYTES((uint64_t) ((double) p->copy_blocks_size / time_spent * USEC_PER_SEC)));
+                if (time_spent > 250 * USEC_PER_MSEC) /* Show throughput, but not if we spent too little time
+                                                         on it, since it's just noise then */
+                        log_info("Block level copying and synchronization of partition %" PRIu64
+                                 " complete in %s (%s/s).",
+                                 p->partno,
+                                 FORMAT_TIMESPAN(time_spent, 0),
+                                 FORMAT_BYTES((uint64_t) ((double) p->copy_blocks_size / time_spent *
+                                                          USEC_PER_SEC)));
                 else
-                        log_info("Block level copying and synchronization of partition %" PRIu64 " complete in %s.",
-                                 p->partno, FORMAT_TIMESPAN(time_spent, 0));
+                        log_info("Block level copying and synchronization of partition %" PRIu64
+                                 " complete in %s.",
+                                 p->partno,
+                                 FORMAT_TIMESPAN(time_spent, 0));
 
                 if (p->siblings[VERITY_HASH] && !partition_type_defer(&p->siblings[VERITY_HASH]->type)) {
-                        r = partition_format_verity_hash(context, p->siblings[VERITY_HASH],
-                                                         /* node = */ NULL, partition_target_path(t));
+                        r = partition_format_verity_hash(
+                                        context,
+                                        p->siblings[VERITY_HASH],
+                                        /* node = */ NULL,
+                                        partition_target_path(t));
                         if (r < 0)
                                 return r;
                 }
@@ -4350,7 +4720,7 @@ static int add_exclude_path(const char *path, Hashmap **denylist, DenyType type)
         assert(path);
         assert(denylist);
 
-        st = new(struct stat, 1);
+        st = new (struct stat, 1);
         if (!st)
                 return log_oom();
 
@@ -4358,7 +4728,8 @@ static int add_exclude_path(const char *path, Hashmap **denylist, DenyType type)
         if (r == -ENOENT)
                 return 0;
         if (r < 0)
-                return log_error_errno(r, "Failed to stat source file '%s/%s': %m", strempty(arg_copy_source), path);
+                return log_error_errno(
+                                r, "Failed to stat source file '%s/%s': %m", strempty(arg_copy_source), path);
 
         r = hashmap_ensure_put(denylist, &inode_hash_ops, st, INT_TO_PTR(type));
         if (r == -EEXIST)
@@ -4372,11 +4743,7 @@ static int add_exclude_path(const char *path, Hashmap **denylist, DenyType type)
 }
 
 static int make_copy_files_denylist(
-                Context *context,
-                const Partition *p,
-                const char *source,
-                const char *target,
-                Hashmap **ret) {
+                Context *context, const Partition *p, const char *source, const char *target, Hashmap **ret) {
 
         _cleanup_hashmap_free_ Hashmap *denylist = NULL;
         int r;
@@ -4478,7 +4845,7 @@ static int add_subvolume_path(const char *path, Set **subvolumes) {
         assert(path);
         assert(subvolumes);
 
-        st = new(struct stat, 1);
+        st = new (struct stat, 1);
         if (!st)
                 return log_oom();
 
@@ -4486,7 +4853,8 @@ static int add_subvolume_path(const char *path, Set **subvolumes) {
         if (r == -ENOENT)
                 return 0;
         if (r < 0)
-                return log_error_errno(r, "Failed to stat source file '%s/%s': %m", strempty(arg_copy_source), path);
+                return log_error_errno(
+                                r, "Failed to stat source file '%s/%s': %m", strempty(arg_copy_source), path);
 
         r = set_ensure_consume(subvolumes, &inode_hash_ops, TAKE_PTR(st));
         if (r < 0)
@@ -4496,11 +4864,7 @@ static int add_subvolume_path(const char *path, Set **subvolumes) {
 }
 
 static int make_subvolumes_set(
-                Context *context,
-                const Partition *p,
-                const char *source,
-                const char *target,
-                Set **ret) {
+                Context *context, const Partition *p, const char *source, const char *target, Set **ret) {
         _cleanup_set_free_ Set *subvolumes = NULL;
         int r;
 
@@ -4545,13 +4909,22 @@ static int do_copy_files(Context *context, Partition *p, const char *root) {
                 if (!path_equal(*target, "/"))
                         continue;
 
-                rfd = open(root, O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+                rfd = open(root, O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
                 if (rfd < 0)
                         return -errno;
 
-                sfd = chase_and_open(*source, arg_copy_source, CHASE_PREFIX_ROOT, O_PATH|O_DIRECTORY|O_CLOEXEC|O_NOCTTY, NULL);
+                sfd = chase_and_open(
+                                *source,
+                                arg_copy_source,
+                                CHASE_PREFIX_ROOT,
+                                O_PATH | O_DIRECTORY | O_CLOEXEC | O_NOCTTY,
+                                NULL);
                 if (sfd < 0)
-                        return log_error_errno(sfd, "Failed to open source file '%s%s': %m", strempty(arg_copy_source), *source);
+                        return log_error_errno(
+                                        sfd,
+                                        "Failed to open source file '%s%s': %m",
+                                        strempty(arg_copy_source),
+                                        *source);
 
                 (void) copy_xattr(sfd, NULL, rfd, NULL, COPY_ALL_XATTRS);
                 (void) copy_access(sfd, rfd);
@@ -4573,59 +4946,109 @@ static int do_copy_files(Context *context, Partition *p, const char *root) {
                 if (r < 0)
                         return r;
 
-                sfd = chase_and_open(*source, arg_copy_source, CHASE_PREFIX_ROOT, O_CLOEXEC|O_NOCTTY, NULL);
+                sfd = chase_and_open(*source, arg_copy_source, CHASE_PREFIX_ROOT, O_CLOEXEC | O_NOCTTY, NULL);
                 if (sfd == -ENOENT) {
-                        log_notice_errno(sfd, "Failed to open source file '%s%s', skipping: %m", strempty(arg_copy_source), *source);
+                        log_notice_errno(
+                                        sfd,
+                                        "Failed to open source file '%s%s', skipping: %m",
+                                        strempty(arg_copy_source),
+                                        *source);
                         continue;
                 }
                 if (sfd < 0)
-                        return log_error_errno(sfd, "Failed to open source file '%s%s': %m", strempty(arg_copy_source), *source);
+                        return log_error_errno(
+                                        sfd,
+                                        "Failed to open source file '%s%s': %m",
+                                        strempty(arg_copy_source),
+                                        *source);
 
                 r = fd_verify_regular(sfd);
                 if (r < 0) {
                         if (r != -EISDIR)
-                                return log_error_errno(r, "Failed to check type of source file '%s': %m", *source);
+                                return log_error_errno(
+                                                r, "Failed to check type of source file '%s': %m", *source);
 
                         /* We are looking at a directory */
-                        tfd = chase_and_open(*target, root, CHASE_PREFIX_ROOT, O_RDONLY|O_DIRECTORY|O_CLOEXEC, NULL);
+                        tfd = chase_and_open(
+                                        *target,
+                                        root,
+                                        CHASE_PREFIX_ROOT,
+                                        O_RDONLY | O_DIRECTORY | O_CLOEXEC,
+                                        NULL);
                         if (tfd < 0) {
                                 _cleanup_free_ char *dn = NULL, *fn = NULL;
 
                                 if (tfd != -ENOENT)
-                                        return log_error_errno(tfd, "Failed to open target directory '%s': %m", *target);
+                                        return log_error_errno(
+                                                        tfd,
+                                                        "Failed to open target directory '%s': %m",
+                                                        *target);
 
                                 r = path_extract_filename(*target, &fn);
                                 if (r < 0)
-                                        return log_error_errno(r, "Failed to extract filename from '%s': %m", *target);
+                                        return log_error_errno(
+                                                        r, "Failed to extract filename from '%s': %m", *target);
 
                                 r = path_extract_directory(*target, &dn);
                                 if (r < 0)
-                                        return log_error_errno(r, "Failed to extract directory from '%s': %m", *target);
+                                        return log_error_errno(
+                                                        r, "Failed to extract directory from '%s': %m", *target);
 
-                                r = mkdir_p_root(root, dn, UID_INVALID, GID_INVALID, 0755, p->subvolumes);
+                                r = mkdir_p_root(
+                                                root,
+                                                dn,
+                                                UID_INVALID,
+                                                GID_INVALID,
+                                                0755,
+                                                p->subvolumes,
+                                                epoch_or_utime_now());
                                 if (r < 0)
-                                        return log_error_errno(r, "Failed to create parent directory '%s': %m", dn);
+                                        return log_error_errno(
+                                                        r, "Failed to create parent directory '%s': %m", dn);
 
-                                pfd = chase_and_open(dn, root, CHASE_PREFIX_ROOT, O_RDONLY|O_DIRECTORY|O_CLOEXEC, NULL);
+                                pfd = chase_and_open(
+                                                dn,
+                                                root,
+                                                CHASE_PREFIX_ROOT,
+                                                O_RDONLY | O_DIRECTORY | O_CLOEXEC,
+                                                NULL);
                                 if (pfd < 0)
-                                        return log_error_errno(pfd, "Failed to open parent directory of target: %m");
+                                        return log_error_errno(
+                                                        pfd, "Failed to open parent directory of target: %m");
 
                                 r = copy_tree_at(
-                                                sfd, ".",
-                                                pfd, fn,
-                                                UID_INVALID, GID_INVALID,
-                                                COPY_REFLINK|COPY_HOLES|COPY_MERGE|COPY_REPLACE|COPY_SIGINT|COPY_HARDLINKS|COPY_ALL_XATTRS|COPY_GRACEFUL_WARN|COPY_TRUNCATE,
-                                                denylist, subvolumes_by_source_inode);
+                                                sfd,
+                                                ".",
+                                                pfd,
+                                                fn,
+                                                UID_INVALID,
+                                                GID_INVALID,
+                                                COPY_REFLINK | COPY_HOLES | COPY_MERGE | COPY_REPLACE |
+                                                                COPY_SIGINT | COPY_HARDLINKS | COPY_ALL_XATTRS |
+                                                                COPY_GRACEFUL_WARN | COPY_TRUNCATE,
+                                                denylist,
+                                                subvolumes_by_source_inode);
                         } else
                                 r = copy_tree_at(
-                                                sfd, ".",
-                                                tfd, ".",
-                                                UID_INVALID, GID_INVALID,
-                                                COPY_REFLINK|COPY_HOLES|COPY_MERGE|COPY_REPLACE|COPY_SIGINT|COPY_HARDLINKS|COPY_ALL_XATTRS|COPY_GRACEFUL_WARN|COPY_TRUNCATE,
-                                                denylist, subvolumes_by_source_inode);
+                                                sfd,
+                                                ".",
+                                                tfd,
+                                                ".",
+                                                UID_INVALID,
+                                                GID_INVALID,
+                                                COPY_REFLINK | COPY_HOLES | COPY_MERGE | COPY_REPLACE |
+                                                                COPY_SIGINT | COPY_HARDLINKS | COPY_ALL_XATTRS |
+                                                                COPY_GRACEFUL_WARN | COPY_TRUNCATE,
+                                                denylist,
+                                                subvolumes_by_source_inode);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to copy '%s%s' to '%s%s': %m",
-                                                       strempty(arg_copy_source), *source, strempty(root), *target);
+                                return log_error_errno(
+                                                r,
+                                                "Failed to copy '%s%s' to '%s%s': %m",
+                                                strempty(arg_copy_source),
+                                                *source,
+                                                strempty(root),
+                                                *target);
                 } else {
                         _cleanup_free_ char *dn = NULL, *fn = NULL;
 
@@ -4633,8 +5056,11 @@ static int do_copy_files(Context *context, Partition *p, const char *root) {
 
                         r = path_extract_filename(*target, &fn);
                         if (r == -EADDRNOTAVAIL || r == O_DIRECTORY)
-                                return log_error_errno(SYNTHETIC_ERRNO(EISDIR),
-                                                       "Target path '%s' refers to a directory, but source path '%s' refers to regular file, can't copy.", *target, *source);
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EISDIR),
+                                                "Target path '%s' refers to a directory, but source path '%s' refers to regular file, can't copy.",
+                                                *target,
+                                                *source);
                         if (r < 0)
                                 return log_error_errno(r, "Failed to extract filename from '%s': %m", *target);
 
@@ -4642,21 +5068,37 @@ static int do_copy_files(Context *context, Partition *p, const char *root) {
                         if (r < 0)
                                 return log_error_errno(r, "Failed to extract directory from '%s': %m", *target);
 
-                        r = mkdir_p_root(root, dn, UID_INVALID, GID_INVALID, 0755, p->subvolumes);
+                        r = mkdir_p_root(
+                                        root,
+                                        dn,
+                                        UID_INVALID,
+                                        GID_INVALID,
+                                        0755,
+                                        p->subvolumes,
+                                        epoch_or_utime_now());
                         if (r < 0)
                                 return log_error_errno(r, "Failed to create parent directory: %m");
 
-                        pfd = chase_and_open(dn, root, CHASE_PREFIX_ROOT, O_RDONLY|O_DIRECTORY|O_CLOEXEC, NULL);
+                        pfd = chase_and_open(
+                                        dn, root, CHASE_PREFIX_ROOT, O_RDONLY | O_DIRECTORY | O_CLOEXEC, NULL);
                         if (pfd < 0)
                                 return log_error_errno(pfd, "Failed to open parent directory of target: %m");
 
-                        tfd = openat(pfd, fn, O_CREAT|O_EXCL|O_WRONLY|O_CLOEXEC, 0700);
+                        tfd = openat(pfd, fn, O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0700);
                         if (tfd < 0)
                                 return log_error_errno(errno, "Failed to create target file '%s': %m", *target);
 
-                        r = copy_bytes(sfd, tfd, UINT64_MAX, COPY_REFLINK|COPY_HOLES|COPY_SIGINT|COPY_TRUNCATE);
+                        r = copy_bytes(sfd,
+                                       tfd,
+                                       UINT64_MAX,
+                                       COPY_REFLINK | COPY_HOLES | COPY_SIGINT | COPY_TRUNCATE);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to copy '%s' to '%s%s': %m", *source, strempty(arg_copy_source), *target);
+                                return log_error_errno(
+                                                r,
+                                                "Failed to copy '%s' to '%s%s': %m",
+                                                *source,
+                                                strempty(arg_copy_source),
+                                                *target);
 
                         (void) copy_xattr(sfd, NULL, tfd, NULL, COPY_ALL_XATTRS);
                         (void) copy_access(sfd, tfd);
@@ -4673,13 +5115,27 @@ static int do_make_directories(Partition *p, const char *root) {
         assert(p);
         assert(root);
 
-        STRV_FOREACH(d, p->make_directories) {
-                r = mkdir_p_root(root, *d, UID_INVALID, GID_INVALID, 0755, p->subvolumes);
+        usec_t epoch =
+
+                        STRV_FOREACH(d, p->make_directories) {
+                r = mkdir_p_root(root, *d, UID_INVALID, GID_INVALID, 0755, p->subvolumes, epoch_or_utime_now());
                 if (r < 0)
                         return log_error_errno(r, "Failed to create directory '%s' in file system: %m", *d);
         }
 
         return 0;
+}
+
+static usec_t epoch_or_utime_now(void) {
+        uint64_t epoch;
+
+        if (secure_getenv_uint64("SOURCE_DATE_EPOCH", &epoch) >= 0) {
+                if (epoch > UINT64_MAX / USEC_PER_SEC) /* Overflow check */
+                        return USEC_INFINITY;
+                return (usec_t) epoch * USEC_PER_SEC;
+        }
+
+        return UTIME_NOW;
 }
 
 static bool partition_needs_populate(Partition *p) {
@@ -4734,7 +5190,9 @@ static int partition_populate_filesystem(Context *context, Partition *p, const c
          * appear in the host namespace. Hence we fork a child that has its own file system namespace and
          * detached mount propagation. */
 
-        r = safe_fork("(sd-copy)", FORK_DEATHSIG_SIGTERM|FORK_LOG|FORK_WAIT|FORK_NEW_MOUNTNS|FORK_MOUNTNS_SLAVE, NULL);
+        r = safe_fork("(sd-copy)",
+                      FORK_DEATHSIG_SIGTERM | FORK_LOG | FORK_WAIT | FORK_NEW_MOUNTNS | FORK_MOUNTNS_SLAVE,
+                      NULL);
         if (r < 0)
                 return r;
         if (r == 0) {
@@ -4747,7 +5205,13 @@ static int partition_populate_filesystem(Context *context, Partition *p, const c
                         _exit(EXIT_FAILURE);
                 }
 
-                if (mount_nofollow_verbose(LOG_ERR, node, fs, p->format, MS_NOATIME|MS_NODEV|MS_NOEXEC|MS_NOSUID, NULL) < 0)
+                if (mount_nofollow_verbose(
+                                    LOG_ERR,
+                                    node,
+                                    fs,
+                                    p->format,
+                                    MS_NOATIME | MS_NODEV | MS_NOEXEC | MS_NOSUID,
+                                    NULL) < 0)
                         _exit(EXIT_FAILURE);
 
                 if (do_copy_files(context, p, fs) < 0)
@@ -4803,10 +5267,12 @@ static int context_mkfs(Context *context) {
 
                 /* If we're doing encryption, we make sure we keep free space at the end which is required
                  * for cryptsetup's offline encryption. */
-                r = partition_target_prepare(context, p,
-                                             p->new_size - (p->encrypt != ENCRYPT_OFF ? LUKS2_METADATA_KEEP_FREE : 0),
-                                             /*need_path=*/ true,
-                                             &t);
+                r = partition_target_prepare(
+                                context,
+                                p,
+                                p->new_size - (p->encrypt != ENCRYPT_OFF ? LUKS2_METADATA_KEEP_FREE : 0),
+                                /*need_path=*/true,
+                                &t);
                 if (r < 0)
                         return r;
 
@@ -4828,9 +5294,10 @@ static int context_mkfs(Context *context) {
 
                 if (partition_needs_populate(p) && (!t->loop || fstype_is_ro(p->format))) {
                         if (!mkfs_supports_root_option(p->format))
-                                return log_error_errno(SYNTHETIC_ERRNO(ENODEV),
-                                                        "Loop device access is required to populate %s filesystems.",
-                                                        p->format);
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(ENODEV),
+                                                "Loop device access is required to populate %s filesystems.",
+                                                p->format);
 
                         r = partition_populate_directory(context, p, &root);
                         if (r < 0)
@@ -4839,13 +5306,21 @@ static int context_mkfs(Context *context) {
 
                 r = mkfs_options_from_env("REPART", p->format, &extra_mkfs_options);
                 if (r < 0)
-                        return log_error_errno(r,
-                                               "Failed to determine mkfs command line options for '%s': %m",
-                                               p->format);
+                        return log_error_errno(
+                                        r,
+                                        "Failed to determine mkfs command line options for '%s': %m",
+                                        p->format);
 
-                r = make_filesystem(partition_target_path(t), p->format, strempty(p->new_label), root,
-                                    p->fs_uuid, arg_discard, /* quiet = */ false,
-                                    context->fs_sector_size, extra_mkfs_options);
+                r = make_filesystem(
+                                partition_target_path(t),
+                                p->format,
+                                strempty(p->new_label),
+                                root,
+                                p->fs_uuid,
+                                arg_discard,
+                                /* quiet = */ false,
+                                context->fs_sector_size,
+                                extra_mkfs_options);
                 if (r < 0)
                         return r;
 
@@ -4879,8 +5354,11 @@ static int context_mkfs(Context *context) {
                         return r;
 
                 if (p->siblings[VERITY_HASH] && !partition_type_defer(&p->siblings[VERITY_HASH]->type)) {
-                        r = partition_format_verity_hash(context, p->siblings[VERITY_HASH],
-                                                         /* node = */ NULL, partition_target_path(t));
+                        r = partition_format_verity_hash(
+                                        context,
+                                        p->siblings[VERITY_HASH],
+                                        /* node = */ NULL,
+                                        partition_target_path(t));
                         if (r < 0)
                                 return r;
                 }
@@ -4910,15 +5388,19 @@ static int parse_x509_certificate(const char *certificate, size_t certificate_si
 
         cert = PEM_read_bio_X509(cb, NULL, NULL, NULL);
         if (!cert)
-                return log_error_errno(SYNTHETIC_ERRNO(EBADMSG), "Failed to parse X.509 certificate: %s",
-                                       ERR_error_string(ERR_get_error(), NULL));
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EBADMSG),
+                                "Failed to parse X.509 certificate: %s",
+                                ERR_error_string(ERR_get_error(), NULL));
 
         if (ret)
                 *ret = TAKE_PTR(cert);
 
         return 0;
 #else
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "OpenSSL is not supported, cannot parse X509 certificate.");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOPNOTSUPP),
+                        "OpenSSL is not supported, cannot parse X509 certificate.");
 #endif
 }
 
@@ -4937,15 +5419,18 @@ static int parse_private_key(const char *key, size_t key_size, EVP_PKEY **ret) {
 
         pk = PEM_read_bio_PrivateKey(kb, NULL, NULL, NULL);
         if (!pk)
-                return log_error_errno(SYNTHETIC_ERRNO(EIO), "Failed to parse PEM private key: %s",
-                                       ERR_error_string(ERR_get_error(), NULL));
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EIO),
+                                "Failed to parse PEM private key: %s",
+                                ERR_error_string(ERR_get_error(), NULL));
 
         if (ret)
                 *ret = TAKE_PTR(pk);
 
         return 0;
 #else
-        return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "OpenSSL is not supported, cannot parse private key.");
+        return log_error_errno(
+                        SYNTHETIC_ERRNO(EOPNOTSUPP), "OpenSSL is not supported, cannot parse private key.");
 #endif
 }
 
@@ -4981,8 +5466,8 @@ static int partition_acquire_uuid(Context *context, Partition *p, sd_id128_t *re
          * If first partition instance of type TYPE_UUID:
          *     PARTITION_UUID := HMAC-SHA256(SEED, TYPE_UUID)
          *
-         * For all later partition instances of type TYPE_UUID with INSTANCE being the LE64 encoded instance number:
-         *     PARTITION_UUID := HMAC-SHA256(SEED, TYPE_UUID || INSTANCE)
+         * For all later partition instances of type TYPE_UUID with INSTANCE being the LE64 encoded instance
+         * number: PARTITION_UUID := HMAC-SHA256(SEED, TYPE_UUID || INSTANCE)
          */
 
         LIST_FOREACH(partitions, q, context->partitions) {
@@ -4998,7 +5483,8 @@ static int partition_acquire_uuid(Context *context, Partition *p, sd_id128_t *re
         plaintext.type_uuid = p->type.uuid;
         plaintext.counter = htole64(k);
 
-        hmac_sha256(context->seed.bytes, sizeof(context->seed.bytes),
+        hmac_sha256(context->seed.bytes,
+                    sizeof(context->seed.bytes),
                     &plaintext,
                     k == 0 ? sizeof(sd_id128_t) : sizeof(plaintext),
                     result.md);
@@ -5013,7 +5499,9 @@ static int partition_acquire_uuid(Context *context, Partition *p, sd_id128_t *re
                         continue;
 
                 if (sd_id128_in_set(result.id, q->current_uuid, q->new_uuid)) {
-                        log_warning("Partition UUID calculated from seed for partition %" PRIu64 " already used, reverting to randomized UUID.", p->partno);
+                        log_warning("Partition UUID calculated from seed for partition %" PRIu64
+                                    " already used, reverting to randomized UUID.",
+                                    p->partno);
 
                         r = sd_id128_randomize(&result.id);
                         if (r < 0)
@@ -5048,8 +5536,7 @@ static int partition_acquire_label(Context *context, Partition *p, char **ret) {
                         if (p == q)
                                 break;
 
-                        if (streq_ptr(ll, q->current_label) ||
-                            streq_ptr(ll, q->new_label)) {
+                        if (streq_ptr(ll, q->current_label) || streq_ptr(ll, q->new_label)) {
                                 retry = true;
                                 break;
                         }
@@ -5158,7 +5645,7 @@ static int set_gpt_flags(struct fdisk_partition *q, uint64_t flags) {
 
         for (unsigned i = 0; i < sizeof(flags) * 8; i++) {
                 uint64_t bit = UINT64_C(1) << i;
-                char buf[DECIMAL_STR_MAX(unsigned)+1];
+                char buf[DECIMAL_STR_MAX(unsigned) + 1];
 
                 if (!FLAGS_SET(flags, bit))
                         continue;
@@ -5243,7 +5730,8 @@ static int context_mangle_partitions(Context *context) {
                                 if (r < 0)
                                         return log_error_errno(r, "Failed to enable explicit sizing: %m");
 
-                                r = fdisk_partition_set_size(p->current_partition, p->new_size / context->sector_size);
+                                r = fdisk_partition_set_size(
+                                                p->current_partition, p->new_size / context->sector_size);
                                 if (r < 0)
                                         return log_error_errno(r, "Failed to grow partition: %m");
 
@@ -5252,7 +5740,8 @@ static int context_mangle_partitions(Context *context) {
                         }
 
                         if (!sd_id128_equal(p->new_uuid, p->current_uuid)) {
-                                r = fdisk_partition_set_uuid(p->current_partition, SD_ID128_TO_UUID_STRING(p->new_uuid));
+                                r = fdisk_partition_set_uuid(
+                                                p->current_partition, SD_ID128_TO_UUID_STRING(p->new_uuid));
                                 if (r < 0)
                                         return log_error_errno(r, "Failed to set partition UUID: %m");
 
@@ -5265,14 +5754,16 @@ static int context_mangle_partitions(Context *context) {
                                 if (r < 0)
                                         return log_error_errno(r, "Failed to set partition label: %m");
 
-                                log_info("Setting partition label of existing partition %" PRIu64 ".", p->partno);
+                                log_info("Setting partition label of existing partition %" PRIu64 ".",
+                                         p->partno);
                                 changed = true;
                         }
 
                         if (changed) {
                                 assert(!PARTITION_IS_FOREIGN(p)); /* never touch foreign partitions */
 
-                                r = fdisk_set_partition(context->fdisk_context, p->partno, p->current_partition);
+                                r = fdisk_set_partition(
+                                                context->fdisk_context, p->partno, p->current_partition);
                                 if (r < 0)
                                         return log_error_errno(r, "Failed to update partition: %m");
                         }
@@ -5349,9 +5840,9 @@ static int split_name_printf(Partition *p, char **ret) {
 
         const Specifier table[] = {
                 { 't', specifier_string, GPT_PARTITION_TYPE_UUID_TO_STRING_HARDER(p->type.uuid) },
-                { 'T', specifier_id128,  &p->type.uuid                                          },
-                { 'U', specifier_id128,  &p->new_uuid                                           },
-                { 'n', specifier_uint64, &p->partno                                             },
+                { 'T', specifier_id128, &p->type.uuid },
+                { 'U', specifier_id128, &p->new_uuid },
+                { 'n', specifier_uint64, &p->partno },
 
                 COMMON_SYSTEM_SPECIFIERS,
                 {}
@@ -5415,7 +5906,8 @@ static int split_name_resolve(Context *context) {
 
                 r = split_name_printf(p, &resolved);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to resolve specifiers in %s: %m", p->split_name_format);
+                        return log_error_errno(
+                                        r, "Failed to resolve specifiers in %s: %m", p->split_name_format);
 
                 if (parent)
                         p->split_path = strjoin(parent, "/", base, ".", resolved, ext);
@@ -5439,9 +5931,12 @@ static int split_name_resolve(Context *context) {
                         if (!streq(p->split_path, q->split_path))
                                 continue;
 
-                        return log_error_errno(SYNTHETIC_ERRNO(ENOTUNIQ),
-                                               "%s and %s have the same resolved split name \"%s\", refusing",
-                                               p->definition_path, q->definition_path, p->split_path);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(ENOTUNIQ),
+                                        "%s and %s have the same resolved split name \"%s\", refusing",
+                                        p->definition_path,
+                                        q->definition_path,
+                                        p->split_path);
                 }
         }
 
@@ -5475,9 +5970,10 @@ static int context_split(Context *context) {
                 if (partition_type_defer(&p->type))
                         continue;
 
-                fdt = open(p->split_path, O_WRONLY|O_NOCTTY|O_CLOEXEC|O_NOFOLLOW|O_CREAT|O_EXCL, 0666);
+                fdt = open(p->split_path, O_WRONLY | O_NOCTTY | O_CLOEXEC | O_NOFOLLOW | O_CREAT | O_EXCL, 0666);
                 if (fdt < 0)
-                        return log_error_errno(fdt, "Failed to open split partition file %s: %m", p->split_path);
+                        return log_error_errno(
+                                        fdt, "Failed to open split partition file %s: %m", p->split_path);
 
                 if (fd < 0)
                         assert_se((fd = fdisk_get_devfd(context->fdisk_context)) >= 0);
@@ -5485,7 +5981,7 @@ static int context_split(Context *context) {
                 if (lseek(fd, p->offset, SEEK_SET) < 0)
                         return log_error_errno(errno, "Failed to seek to partition offset: %m");
 
-                r = copy_bytes(fd, fdt, p->new_size, COPY_REFLINK|COPY_HOLES|COPY_TRUNCATE);
+                r = copy_bytes(fd, fdt, p->new_size, COPY_REFLINK | COPY_HOLES | COPY_TRUNCATE);
                 if (r < 0)
                         return log_error_errno(r, "Failed to copy to split partition %s: %m", p->split_path);
         }
@@ -5512,7 +6008,8 @@ static int context_write_partition_table(Context *context) {
         log_info("Applying changes to %s.", context->node);
 
         if (context->from_scratch && arg_empty != EMPTY_CREATE) {
-                /* Erase everything if we operate from scratch, except if the image was just created anyway, and thus is definitely empty. */
+                /* Erase everything if we operate from scratch, except if the image was just created anyway,
+                 * and thus is definitely empty. */
                 r = context_wipe_range(context, 0, context->total);
                 if (r < 0)
                         return r;
@@ -5562,7 +6059,8 @@ static int context_write_partition_table(Context *context) {
         if (capable == -ENOTBLK)
                 log_debug("Not telling kernel to reread partition table, since we are not operating on a block device.");
         else if (capable < 0)
-                return log_error_errno(capable, "Failed to check if block device supports partition scanning: %m");
+                return log_error_errno(
+                                capable, "Failed to check if block device supports partition scanning: %m");
         else if (capable > 0) {
                 log_info("Telling kernel to reread partition table.");
 
@@ -5690,20 +6188,24 @@ static int resolve_copy_blocks_auto_candidate(
                 return log_error_errno(
                                 r,
                                 "Unable to determine containing block device of partition %u:%u: %m",
-                                major(partition_devno), minor(partition_devno));
+                                major(partition_devno),
+                                minor(partition_devno));
 
-        if (restrict_devno != (dev_t) -1 &&
-            restrict_devno != whole_devno)
+        if (restrict_devno != (dev_t) -1 && restrict_devno != whole_devno)
                 return log_error_errno(
                                 SYNTHETIC_ERRNO(EPERM),
                                 "Partition %u:%u is located outside of block device %u:%u, refusing.",
-                                major(partition_devno), minor(partition_devno),
-                                major(restrict_devno), minor(restrict_devno));
+                                major(partition_devno),
+                                minor(partition_devno),
+                                major(restrict_devno),
+                                minor(restrict_devno));
 
-        fd = r = device_open_from_devnum(S_IFBLK, whole_devno, O_RDONLY|O_CLOEXEC|O_NONBLOCK, &p);
+        fd = r = device_open_from_devnum(S_IFBLK, whole_devno, O_RDONLY | O_CLOEXEC | O_NONBLOCK, &p);
         if (r < 0)
-                return log_error_errno(r, "Failed to open block device " DEVNUM_FORMAT_STR ": %m",
-                                       DEVNUM_FORMAT_VAL(whole_devno));
+                return log_error_errno(
+                                r,
+                                "Failed to open block device " DEVNUM_FORMAT_STR ": %m",
+                                DEVNUM_FORMAT_VAL(whole_devno));
 
         b = blkid_new_probe();
         if (!b)
@@ -5720,7 +6222,8 @@ static int resolve_copy_blocks_auto_candidate(
         errno = 0;
         r = blkid_do_safeprobe(b);
         if (r == _BLKID_SAFEPROBE_ERROR)
-                return log_error_errno(errno_or_else(EIO), "Unable to probe for partition table of '%s': %m", p);
+                return log_error_errno(
+                                errno_or_else(EIO), "Unable to probe for partition table of '%s': %m", p);
         if (IN_SET(r, _BLKID_SAFEPROBE_AMBIGUOUS, _BLKID_SAFEPROBE_NOT_FOUND)) {
                 log_debug("Didn't find partition table on block device '%s'.", p);
                 return false;
@@ -5742,14 +6245,18 @@ static int resolve_copy_blocks_auto_candidate(
         pp = blkid_partlist_devno_to_partition(pl, partition_devno);
         if (!pp) {
                 log_debug("Partition %u:%u has no matching partition table entry on '%s'.",
-                          major(partition_devno), minor(partition_devno), p);
+                          major(partition_devno),
+                          minor(partition_devno),
+                          p);
                 return false;
         }
 
         t = blkid_partition_get_type_string(pp);
         if (isempty(t)) {
                 log_debug("Partition %u:%u has no type on '%s'.",
-                          major(partition_devno), minor(partition_devno), p);
+                          major(partition_devno),
+                          minor(partition_devno),
+                          p);
                 return false;
         }
 
@@ -5760,19 +6267,26 @@ static int resolve_copy_blocks_auto_candidate(
         }
 
         if (!sd_id128_equal(pt_parsed, partition_type.uuid)) {
-                log_debug("Partition %u:%u has non-matching partition type " SD_ID128_FORMAT_STR " (needed: " SD_ID128_FORMAT_STR "), ignoring.",
-                          major(partition_devno), minor(partition_devno),
-                          SD_ID128_FORMAT_VAL(pt_parsed), SD_ID128_FORMAT_VAL(partition_type.uuid));
+                log_debug("Partition %u:%u has non-matching partition type " SD_ID128_FORMAT_STR
+                          " (needed: " SD_ID128_FORMAT_STR "), ignoring.",
+                          major(partition_devno),
+                          minor(partition_devno),
+                          SD_ID128_FORMAT_VAL(pt_parsed),
+                          SD_ID128_FORMAT_VAL(partition_type.uuid));
                 return false;
         }
 
         r = blkid_partition_get_uuid_id128(pp, &u);
         if (r == -ENXIO) {
-                log_debug_errno(r, "Partition " DEVNUM_FORMAT_STR " has no UUID.", DEVNUM_FORMAT_VAL(partition_devno));
+                log_debug_errno(r,
+                                "Partition " DEVNUM_FORMAT_STR " has no UUID.",
+                                DEVNUM_FORMAT_VAL(partition_devno));
                 return false;
         }
         if (r < 0) {
-                log_debug_errno(r, "Failed to read partition UUID of " DEVNUM_FORMAT_STR ": %m", DEVNUM_FORMAT_VAL(partition_devno));
+                log_debug_errno(r,
+                                "Failed to read partition UUID of " DEVNUM_FORMAT_STR ": %m",
+                                DEVNUM_FORMAT_VAL(partition_devno));
                 return false;
         }
 
@@ -5786,10 +6300,7 @@ static int resolve_copy_blocks_auto_candidate(
         return true;
 }
 
-static int find_backing_devno(
-                const char *path,
-                const char *root,
-                dev_t *ret) {
+static int find_backing_devno(const char *path, const char *root, dev_t *ret) {
 
         _cleanup_free_ char *resolved = NULL;
         int r;
@@ -5803,7 +6314,8 @@ static int find_backing_devno(
         r = path_is_mount_point(resolved, NULL, 0);
         if (r < 0)
                 return r;
-        if (r == 0) /* Not a mount point, then it's not a partition of its own, let's not automatically use it. */
+        if (r ==
+            0) /* Not a mount point, then it's not a partition of its own, let's not automatically use it. */
                 return -ENOENT;
 
         r = get_block_device(resolved, ret);
@@ -5839,8 +6351,9 @@ static int resolve_copy_blocks_auto(
          * it is (dev_t) -1 then free access shall be allowed (if neither switch is used). */
 
         if (restrict_devno == 0)
-                return log_error_errno(SYNTHETIC_ERRNO(EPERM),
-                                       "Automatic discovery of backing block devices not permitted in --root= mode, refusing.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EPERM),
+                                "Automatic discovery of backing block devices not permitted in --root= mode, refusing.");
 
         /* Handles CopyBlocks=auto, and finds the right source partition to copy from. We look for matching
          * partitions in the host, using the appropriate directory as key and ensuring that the partition
@@ -5860,16 +6373,21 @@ static int resolve_copy_blocks_auto(
         } else if (type.designator == PARTITION_XBOOTLDR)
                 try1 = "/boot/";
         else
-                return log_error_errno(SYNTHETIC_ERRNO(EOPNOTSUPP),
-                                       "Partition type " SD_ID128_FORMAT_STR " not supported from automatic source block device discovery.",
-                                       SD_ID128_FORMAT_VAL(type.uuid));
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EOPNOTSUPP),
+                                "Partition type " SD_ID128_FORMAT_STR
+                                " not supported from automatic source block device discovery.",
+                                SD_ID128_FORMAT_VAL(type.uuid));
 
         r = find_backing_devno(try1, root, &devno);
         if (r == -ENOENT && try2)
                 r = find_backing_devno(try2, root, &devno);
         if (r < 0)
-                return log_error_errno(r, "Failed to resolve automatic CopyBlocks= path for partition type " SD_ID128_FORMAT_STR ", sorry: %m",
-                                       SD_ID128_FORMAT_VAL(type.uuid));
+                return log_error_errno(
+                                r,
+                                "Failed to resolve automatic CopyBlocks= path for partition type " SD_ID128_FORMAT_STR
+                                ", sorry: %m",
+                                SD_ID128_FORMAT_VAL(type.uuid));
 
         xsprintf_sys_block_path(p, "/slaves", devno);
         d = opendir(p);
@@ -5917,8 +6435,9 @@ static int resolve_copy_blocks_auto(
                         if (r > 0) {
                                 /* We found a matching one! */
                                 if (found != 0)
-                                        return log_error_errno(SYNTHETIC_ERRNO(ENOTUNIQ),
-                                                               "Multiple matching partitions found, refusing.");
+                                        return log_error_errno(
+                                                        SYNTHETIC_ERRNO(ENOTUNIQ),
+                                                        "Multiple matching partitions found, refusing.");
 
                                 found = sl;
                                 found_uuid = u;
@@ -5935,8 +6454,9 @@ static int resolve_copy_blocks_auto(
         }
 
         if (found == 0)
-                return log_error_errno(SYNTHETIC_ERRNO(ENXIO),
-                                       "Unable to automatically discover suitable partition to copy blocks from.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(ENXIO),
+                                "Unable to automatically discover suitable partition to copy blocks from.");
 
         if (ret_devno)
                 *ret_devno = found;
@@ -5947,9 +6467,7 @@ static int resolve_copy_blocks_auto(
         return 0;
 }
 
-static int context_open_copy_block_paths(
-                Context *context,
-                dev_t restrict_devno) {
+static int context_open_copy_block_paths(Context *context, dev_t restrict_devno) {
 
         int r;
 
@@ -5972,32 +6490,46 @@ static int context_open_copy_block_paths(
 
                 if (p->copy_blocks_path) {
 
-                        source_fd = chase_and_open(p->copy_blocks_path, p->copy_blocks_root, CHASE_PREFIX_ROOT, O_RDONLY|O_CLOEXEC|O_NONBLOCK, &opened);
+                        source_fd = chase_and_open(
+                                        p->copy_blocks_path,
+                                        p->copy_blocks_root,
+                                        CHASE_PREFIX_ROOT,
+                                        O_RDONLY | O_CLOEXEC | O_NONBLOCK,
+                                        &opened);
                         if (source_fd < 0)
-                                return log_error_errno(source_fd, "Failed to open '%s': %m", p->copy_blocks_path);
+                                return log_error_errno(
+                                                source_fd, "Failed to open '%s': %m", p->copy_blocks_path);
 
                         if (fstat(source_fd, &st) < 0)
-                                return log_error_errno(errno, "Failed to stat block copy file '%s': %m", opened);
+                                return log_error_errno(
+                                                errno, "Failed to stat block copy file '%s': %m", opened);
 
                         if (!S_ISREG(st.st_mode) && restrict_devno != (dev_t) -1)
-                                return log_error_errno(SYNTHETIC_ERRNO(EPERM),
-                                                       "Copying from block device node is not permitted in --image=/--root= mode, refusing.");
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EPERM),
+                                                "Copying from block device node is not permitted in --image=/--root= mode, refusing.");
 
                 } else if (p->copy_blocks_auto) {
-                        dev_t devno = 0;  /* Fake initialization to appease gcc. */
+                        dev_t devno = 0; /* Fake initialization to appease gcc. */
 
-                        r = resolve_copy_blocks_auto(p->type, p->copy_blocks_root, restrict_devno, &devno, &uuid);
+                        r = resolve_copy_blocks_auto(
+                                        p->type, p->copy_blocks_root, restrict_devno, &devno, &uuid);
                         if (r < 0)
                                 return r;
                         assert(devno != 0);
 
-                        source_fd = r = device_open_from_devnum(S_IFBLK, devno, O_RDONLY|O_CLOEXEC|O_NONBLOCK, &opened);
+                        source_fd = r = device_open_from_devnum(
+                                        S_IFBLK, devno, O_RDONLY | O_CLOEXEC | O_NONBLOCK, &opened);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to open automatically determined source block copy device " DEVNUM_FORMAT_STR ": %m",
-                                                       DEVNUM_FORMAT_VAL(devno));
+                                return log_error_errno(
+                                                r,
+                                                "Failed to open automatically determined source block copy device " DEVNUM_FORMAT_STR
+                                                ": %m",
+                                                DEVNUM_FORMAT_VAL(devno));
 
                         if (fstat(source_fd, &st) < 0)
-                                return log_error_errno(errno, "Failed to stat block copy file '%s': %m", opened);
+                                return log_error_errno(
+                                                errno, "Failed to stat block copy file '%s': %m", opened);
                 } else
                         continue;
 
@@ -6015,14 +6547,19 @@ static int context_open_copy_block_paths(
                                 if (r == -EUCLEAN)
                                         return btrfs_log_dev_root(LOG_ERR, r, opened);
                                 if (r < 0)
-                                        return log_error_errno(r, "Unable to determine backing block device of '%s': %m", opened);
+                                        return log_error_errno(
+                                                        r,
+                                                        "Unable to determine backing block device of '%s': %m",
+                                                        opened);
                         }
 
                         safe_close(source_fd);
 
-                        source_fd = r = device_open_from_devnum(S_IFBLK, devt, O_RDONLY|O_CLOEXEC|O_NONBLOCK, &bdev);
+                        source_fd = r = device_open_from_devnum(
+                                        S_IFBLK, devt, O_RDONLY | O_CLOEXEC | O_NONBLOCK, &bdev);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to open block device backing '%s': %m", opened);
+                                return log_error_errno(
+                                                r, "Failed to open block device backing '%s': %m", opened);
 
                         if (fstat(source_fd, &st) < 0)
                                 return log_error_errno(errno, "Failed to stat block device '%s': %m", bdev);
@@ -6034,12 +6571,21 @@ static int context_open_copy_block_paths(
                         if (ioctl(source_fd, BLKGETSIZE64, &size) != 0)
                                 return log_error_errno(errno, "Failed to determine size of block device to copy from: %m");
                 } else
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Specified path to copy blocks from '%s' is not a regular file, block device or directory, refusing: %m", opened);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Specified path to copy blocks from '%s' is not a regular file, block device or directory, refusing: %m",
+                                        opened);
 
                 if (size <= 0)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "File to copy bytes from '%s' has zero size, refusing.", opened);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "File to copy bytes from '%s' has zero size, refusing.",
+                                        opened);
                 if (size % 512 != 0)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "File to copy bytes from '%s' has size that is not multiple of 512, refusing.", opened);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "File to copy bytes from '%s' has size that is not multiple of 512, refusing.",
+                                        opened);
 
                 p->copy_blocks_fd = TAKE_FD(source_fd);
                 p->copy_blocks_size = size;
@@ -6076,7 +6622,8 @@ static int fd_apparent_size(int fd, uint64_t *ret) {
                          * that hole isn't followed by more data. */
                         break;
                 if (r < 0)
-                        return log_error_errno(errno, "Failed to seek data in file from offset %"PRIi64": %m", off);
+                        return log_error_errno(
+                                        errno, "Failed to seek data in file from offset %" PRIi64 ": %m", off);
 
                 off = r; /* Set the offset to the start of the data segment. */
 
@@ -6086,7 +6633,8 @@ static int fd_apparent_size(int fd, uint64_t *ret) {
                 if (r < 0) {
                         if (errno == ENXIO)
                                 break;
-                        return log_error_errno(errno, "Failed to seek hole in file from offset %"PRIi64": %m", off);
+                        return log_error_errno(
+                                        errno, "Failed to seek hole in file from offset %" PRIi64 ": %m", off);
                 }
 
                 size += r - off;
@@ -6141,7 +6689,8 @@ static int context_minimize(Context *context) {
                 (void) partition_hint(p, context->node, &hint);
 
                 log_info("Pre-populating %s filesystem of partition %s twice to calculate minimal partition size",
-                         p->format, strna(hint));
+                         p->format,
+                         strna(hint));
 
                 if (!vt) {
                         r = var_tmp_dir(&vt);
@@ -6156,15 +6705,17 @@ static int context_minimize(Context *context) {
                 if (fstype_is_ro(p->format))
                         fs_uuid = p->fs_uuid;
                 else {
-                        fd = open(temp, O_CREAT|O_EXCL|O_CLOEXEC|O_RDWR|O_NOCTTY, 0600);
+                        fd = open(temp, O_CREAT | O_EXCL | O_CLOEXEC | O_RDWR | O_NOCTTY, 0600);
                         if (fd < 0)
                                 return log_error_errno(errno, "Failed to open temporary file %s: %m", temp);
 
                         /* This may seem huge but it will be created sparse so it doesn't take up any space
                          * on disk until written to. */
                         if (ftruncate(fd, 1024ULL * 1024ULL * 1024ULL * 1024ULL) < 0)
-                                return log_error_errno(errno, "Failed to truncate temporary file to %s: %m",
-                                                       FORMAT_BYTES(1024ULL * 1024ULL * 1024ULL * 1024ULL));
+                                return log_error_errno(
+                                                errno,
+                                                "Failed to truncate temporary file to %s: %m",
+                                                FORMAT_BYTES(1024ULL * 1024ULL * 1024ULL * 1024ULL));
 
                         if (arg_offline <= 0) {
                                 r = loop_device_make(fd, O_RDWR, 0, UINT64_MAX, context->sector_size, 0, LOCK_EX, &d);
@@ -6181,9 +6732,10 @@ static int context_minimize(Context *context) {
 
                 if (!d || fstype_is_ro(p->format)) {
                         if (!mkfs_supports_root_option(p->format))
-                                return log_error_errno(SYNTHETIC_ERRNO(ENODEV),
-                                                       "Loop device access is required to populate %s filesystems",
-                                                       p->format);
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(ENODEV),
+                                                "Loop device access is required to populate %s filesystems",
+                                                p->format);
 
                         r = partition_populate_directory(context, p, &root);
                         if (r < 0)
@@ -6192,18 +6744,21 @@ static int context_minimize(Context *context) {
 
                 r = mkfs_options_from_env("REPART", p->format, &extra_mkfs_options);
                 if (r < 0)
-                        return log_error_errno(r,
-                                               "Failed to determine mkfs command line options for '%s': %m",
-                                               p->format);
+                        return log_error_errno(
+                                        r,
+                                        "Failed to determine mkfs command line options for '%s': %m",
+                                        p->format);
 
-                r = make_filesystem(d ? d->node : temp,
-                                    p->format,
-                                    strempty(p->new_label),
-                                    root,
-                                    fs_uuid,
-                                    arg_discard, /* quiet = */ false,
-                                    context->fs_sector_size,
-                                    extra_mkfs_options);
+                r = make_filesystem(
+                                d ? d->node : temp,
+                                p->format,
+                                strempty(p->new_label),
+                                root,
+                                fs_uuid,
+                                arg_discard,
+                                /* quiet = */ false,
+                                context->fs_sector_size,
+                                extra_mkfs_options);
                 if (r < 0)
                         return r;
 
@@ -6212,7 +6767,7 @@ static int context_minimize(Context *context) {
                 if (fstype_is_ro(p->format)) {
                         assert(fd < 0);
 
-                        fd = open(temp, O_RDONLY|O_CLOEXEC|O_NONBLOCK);
+                        fd = open(temp, O_RDONLY | O_CLOEXEC | O_NONBLOCK);
                         if (fd < 0)
                                 return log_error_errno(errno, "Failed to open temporary file %s: %m", temp);
 
@@ -6220,7 +6775,9 @@ static int context_minimize(Context *context) {
                                 return log_error_errno(errno, "Failed to stat temporary file: %m");
 
                         log_info("Minimal partition size of %s filesystem of partition %s is %s",
-                                 p->format, strna(hint), FORMAT_BYTES(st.st_size));
+                                 p->format,
+                                 strna(hint),
+                                 FORMAT_BYTES(st.st_size));
 
                         p->copy_blocks_path = TAKE_PTR(temp);
                         p->copy_blocks_path_is_our_file = true;
@@ -6259,7 +6816,9 @@ static int context_minimize(Context *context) {
                         fsz = MAX(minimal_size_by_fs_name(p->format), fsz);
 
                 log_info("Minimal partition size of %s filesystem of partition %s is %s",
-                         p->format, strna(hint), FORMAT_BYTES(fsz));
+                         p->format,
+                         strna(hint),
+                         FORMAT_BYTES(fsz));
 
                 d = loop_device_unref(d);
 
@@ -6272,19 +6831,22 @@ static int context_minimize(Context *context) {
 
                 if (arg_offline <= 0) {
                         r = loop_device_make(fd, O_RDWR, 0, UINT64_MAX, context->sector_size, 0, LOCK_EX, &d);
-                        if (r < 0 && (arg_offline == 0 || (r != -ENOENT && !ERRNO_IS_PRIVILEGE(r)) || !strv_isempty(p->subvolumes)))
+                        if (r < 0 &&
+                            (arg_offline == 0 || (r != -ENOENT && !ERRNO_IS_PRIVILEGE(r)) ||
+                             !strv_isempty(p->subvolumes)))
                                 return log_error_errno(r, "Failed to make loopback device of %s: %m", temp);
                 }
 
-                r = make_filesystem(d ? d->node : temp,
-                                    p->format,
-                                    strempty(p->new_label),
-                                    root,
-                                    p->fs_uuid,
-                                    arg_discard,
-                                    /* quiet = */ false,
-                                    context->fs_sector_size,
-                                    extra_mkfs_options);
+                r = make_filesystem(
+                                d ? d->node : temp,
+                                p->format,
+                                strempty(p->new_label),
+                                root,
+                                p->fs_uuid,
+                                arg_discard,
+                                /* quiet = */ false,
+                                context->fs_sector_size,
+                                extra_mkfs_options);
                 if (r < 0)
                         return r;
 
@@ -6354,7 +6916,7 @@ static int context_minimize(Context *context) {
                 if (r < 0)
                         return r;
 
-                fd = open(temp, O_RDONLY|O_CLOEXEC|O_NONBLOCK);
+                fd = open(temp, O_RDONLY | O_CLOEXEC | O_NONBLOCK);
                 if (fd < 0)
                         return log_error_errno(errno, "Failed to open temporary file %s: %m", temp);
 
@@ -6362,7 +6924,8 @@ static int context_minimize(Context *context) {
                         return log_error_errno(errno, "Failed to stat temporary file: %m");
 
                 log_info("Minimal partition size of verity hash partition %s is %s",
-                         strna(hint), FORMAT_BYTES(st.st_size));
+                         strna(hint),
+                         FORMAT_BYTES(st.st_size));
 
                 p->copy_blocks_path = TAKE_PTR(temp);
                 p->copy_blocks_path_is_our_file = true;
@@ -6383,7 +6946,7 @@ static int parse_partition_types(const char *p, GptPartitionType **partitions, s
                 _cleanup_free_ char *name = NULL;
                 GptPartitionType type;
 
-                r = extract_first_word(&p, &name, ",", EXTRACT_CUNESCAPE|EXTRACT_DONT_COALESCE_SEPARATORS);
+                r = extract_first_word(&p, &name, ",", EXTRACT_CUNESCAPE | EXTRACT_DONT_COALESCE_SEPARATORS);
                 if (r == 0)
                         break;
                 if (r < 0)
@@ -6391,7 +6954,8 @@ static int parse_partition_types(const char *p, GptPartitionType **partitions, s
 
                 r = gpt_partition_type_from_string(name, &type);
                 if (r < 0)
-                        return log_error_errno(r, "'%s' is not a valid partition type identifier or GUID", name);
+                        return log_error_errno(
+                                        r, "'%s' is not a valid partition type identifier or GUID", name);
 
                 if (!GREEDY_REALLOC(*partitions, *n_partitions + 1))
                         return log_oom();
@@ -6541,8 +7105,8 @@ static int parse_argv(int argc, char *argv[]) {
                 { "tpm2-device",          required_argument, NULL, ARG_TPM2_DEVICE          },
                 { "tpm2-device-key",      required_argument, NULL, ARG_TPM2_DEVICE_KEY      },
                 { "tpm2-seal-key-handle", required_argument, NULL, ARG_TPM2_SEAL_KEY_HANDLE },
-                { "tpm2-pcrs",            required_argument, NULL, ARG_TPM2_PCRS            },
-                { "tpm2-public-key",      required_argument, NULL, ARG_TPM2_PUBLIC_KEY      },
+                { "tpm2-pcrs", required_argument, NULL, ARG_TPM2_PCRS },
+                { "tpm2-public-key", required_argument, NULL, ARG_TPM2_PUBLIC_KEY },
                 { "tpm2-public-key-pcrs", required_argument, NULL, ARG_TPM2_PUBLIC_KEY_PCRS },
                 { "tpm2-pcrlock",         required_argument, NULL, ARG_TPM2_PCRLOCK         },
                 { "split",                required_argument, NULL, ARG_SPLIT                },
@@ -6596,7 +7160,8 @@ static int parse_argv(int argc, char *argv[]) {
 
                         arg_empty = empty_mode_from_string(optarg);
                         if (arg_empty < 0)
-                                return log_error_errno(arg_empty, "Failed to parse --empty= parameter: %s", optarg);
+                                return log_error_errno(
+                                                arg_empty, "Failed to parse --empty= parameter: %s", optarg);
 
                         break;
 
@@ -6683,13 +7248,20 @@ static int parse_argv(int argc, char *argv[]) {
 
                         rounded = round_up_size(parsed, 4096);
                         if (rounded == 0)
-                                return log_error_errno(SYNTHETIC_ERRNO(ERANGE), "Specified image size too small, refusing.");
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(ERANGE),
+                                                "Specified image size too small, refusing.");
                         if (rounded == UINT64_MAX)
-                                return log_error_errno(SYNTHETIC_ERRNO(ERANGE), "Specified image size too large, refusing.");
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(ERANGE),
+                                                "Specified image size too large, refusing.");
 
                         if (rounded != parsed)
-                                log_warning("Specified size is not a multiple of 4096, rounding up automatically. (%" PRIu64 " %s %" PRIu64 ")",
-                                            parsed, special_glyph(SPECIAL_GLYPH_ARROW_RIGHT), rounded);
+                                log_warning("Specified size is not a multiple of 4096, rounding up automatically. (%" PRIu64
+                                            " %s %" PRIu64 ")",
+                                            parsed,
+                                            special_glyph(SPECIAL_GLYPH_ARROW_RIGHT),
+                                            rounded);
 
                         arg_size = rounded;
                         arg_size_auto = false;
@@ -6708,10 +7280,15 @@ static int parse_argv(int argc, char *argv[]) {
                         size_t n = 0;
 
                         r = read_full_file_full(
-                                        AT_FDCWD, optarg, UINT64_MAX, SIZE_MAX,
-                                        READ_FULL_FILE_SECURE|READ_FULL_FILE_WARN_WORLD_READABLE|READ_FULL_FILE_CONNECT_SOCKET,
+                                        AT_FDCWD,
+                                        optarg,
+                                        UINT64_MAX,
+                                        SIZE_MAX,
+                                        READ_FULL_FILE_SECURE | READ_FULL_FILE_WARN_WORLD_READABLE |
+                                                        READ_FULL_FILE_CONNECT_SOCKET,
                                         NULL,
-                                        &k, &n);
+                                        &k,
+                                        &n);
                         if (r < 0)
                                 return log_error_errno(r, "Failed to read key file '%s': %m", optarg);
 
@@ -6746,10 +7323,14 @@ static int parse_argv(int argc, char *argv[]) {
                         size_t n = 0;
 
                         r = read_full_file_full(
-                                        AT_FDCWD, optarg, UINT64_MAX, SIZE_MAX,
+                                        AT_FDCWD,
+                                        optarg,
+                                        UINT64_MAX,
+                                        SIZE_MAX,
                                         READ_FULL_FILE_CONNECT_SOCKET,
                                         NULL,
-                                        &cert, &n);
+                                        &cert,
+                                        &n);
                         if (r < 0)
                                 return log_error_errno(r, "Failed to read certificate file '%s': %m", optarg);
 
@@ -6788,13 +7369,17 @@ static int parse_argv(int argc, char *argv[]) {
                 case ARG_TPM2_SEAL_KEY_HANDLE:
                         r = safe_atou32_full(optarg, 16, &arg_tpm2_seal_key_handle);
                         if (r < 0)
-                                return log_error_errno(r, "Could not parse TPM2 seal key handle index '%s': %m", optarg);
+                                return log_error_errno(
+                                                r,
+                                                "Could not parse TPM2 seal key handle index '%s': %m",
+                                                optarg);
 
                         break;
 
                 case ARG_TPM2_PCRS:
                         auto_hash_pcr_values = false;
-                        r = tpm2_parse_pcr_argument_append(optarg, &arg_tpm2_hash_pcr_values, &arg_tpm2_n_hash_pcr_values);
+                        r = tpm2_parse_pcr_argument_append(
+                                        optarg, &arg_tpm2_hash_pcr_values, &arg_tpm2_n_hash_pcr_values);
                         if (r < 0)
                                 return r;
 
@@ -6833,8 +7418,9 @@ static int parse_argv(int argc, char *argv[]) {
 
                 case ARG_INCLUDE_PARTITIONS:
                         if (arg_filter_partitions_type == FILTER_PARTITIONS_EXCLUDE)
-                                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                                       "Combination of --include-partitions= and --exclude-partitions= is invalid.");
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EINVAL),
+                                                "Combination of --include-partitions= and --exclude-partitions= is invalid.");
 
                         r = parse_partition_types(optarg, &arg_filter_partitions, &arg_n_filter_partitions);
                         if (r < 0)
@@ -6846,8 +7432,9 @@ static int parse_argv(int argc, char *argv[]) {
 
                 case ARG_EXCLUDE_PARTITIONS:
                         if (arg_filter_partitions_type == FILTER_PARTITIONS_INCLUDE)
-                                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                                       "Combination of --include-partitions= and --exclude-partitions= is invalid.");
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EINVAL),
+                                                "Combination of --include-partitions= and --exclude-partitions= is invalid.");
 
                         r = parse_partition_types(optarg, &arg_filter_partitions, &arg_n_filter_partitions);
                         if (r < 0)
@@ -6874,7 +7461,8 @@ static int parse_argv(int argc, char *argv[]) {
                 case ARG_ARCHITECTURE:
                         r = architecture_from_string(optarg);
                         if (r < 0)
-                                return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Invalid architecture '%s'", optarg);
+                                return log_error_errno(
+                                                SYNTHETIC_ERRNO(EINVAL), "Invalid architecture '%s'", optarg);
 
                         arg_architecture = r;
                         break;
@@ -6946,27 +7534,37 @@ static int parse_argv(int argc, char *argv[]) {
                 }
 
         if (argc - optind > 1)
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                       "Expected at most one argument, the path to the block device or image file.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Expected at most one argument, the path to the block device or image file.");
 
         if (arg_make_ddi) {
                 if (arg_definitions)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Combination of --make-ddi= and --definitions= is not supported.");
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Combination of --make-ddi= and --definitions= is not supported.");
                 if (!IN_SET(arg_empty, EMPTY_UNSET, EMPTY_CREATE))
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Combination of --make-ddi= and --empty=%s is not supported.", empty_mode_to_string(arg_empty));
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Combination of --make-ddi= and --empty=%s is not supported.",
+                                        empty_mode_to_string(arg_empty));
 
                 /* Imply automatic sizing in DDI mode */
                 if (arg_size == UINT64_MAX)
                         arg_size_auto = true;
 
                 if (!arg_copy_source)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "No --copy-source= specified, refusing.");
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL), "No --copy-source= specified, refusing.");
 
                 r = dir_is_empty(arg_copy_source, /* ignore_hidden_or_backup= */ false);
                 if (r < 0)
                         return log_error_errno(r, "Failed to determine if '%s' is empty: %m", arg_copy_source);
                 if (r > 0)
-                        return log_error_errno(SYNTHETIC_ERRNO(ENOENT), "Source directory '%s' is empty, refusing to create empty image.", arg_copy_source);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(ENOENT),
+                                        "Source directory '%s' is empty, refusing to create empty image.",
+                                        arg_copy_source);
 
                 if (sd_id128_is_null(arg_seed) && !arg_randomize) {
                         /* We don't want that /etc/machine-id leaks into any image built this way, hence
@@ -6982,8 +7580,9 @@ static int parse_argv(int argc, char *argv[]) {
                 arg_empty = EMPTY_REFUSE;
 
         if (arg_factory_reset > 0 && IN_SET(arg_empty, EMPTY_FORCE, EMPTY_REQUIRE, EMPTY_CREATE))
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                       "Combination of --factory-reset=yes and --empty=force/--empty=require/--empty=create is invalid.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Combination of --factory-reset=yes and --empty=force/--empty=require/--empty=create is invalid.");
 
         if (arg_can_factory_reset)
                 arg_dry_run = true; /* When --can-factory-reset is specified we don't make changes, hence
@@ -6998,11 +7597,14 @@ static int parse_argv(int argc, char *argv[]) {
                 arg_pager_flags |= PAGER_DISABLE;
 
         if (arg_empty == EMPTY_CREATE && arg_size == UINT64_MAX && !arg_size_auto)
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                       "If --empty=create is specified, --size= must be specified, too.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "If --empty=create is specified, --size= must be specified, too.");
 
         if (arg_image && arg_root)
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Please specify either --root= or --image=, the combination of both is not supported.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "Please specify either --root= or --image=, the combination of both is not supported.");
         else if (!arg_image && !arg_root && in_initrd()) {
 
                 /* By default operate on /sysusr/ or /sysroot/ when invoked in the initrd. We prefer the
@@ -7011,7 +7613,8 @@ static int parse_argv(int argc, char *argv[]) {
                 r = path_is_mount_point("/sysusr/usr", NULL, 0);
                 if (r <= 0) {
                         if (r < 0 && r != -ENOENT)
-                                log_debug_errno(r, "Unable to determine whether /sysusr/usr is a mount point, assuming it is not: %m");
+                                log_debug_errno(r,
+                                                "Unable to determine whether /sysusr/usr is a mount point, assuming it is not: %m");
 
                         arg_root = strdup("/sysroot");
                 } else
@@ -7023,12 +7626,14 @@ static int parse_argv(int argc, char *argv[]) {
         arg_node = argc > optind ? argv[optind] : NULL;
 
         if (IN_SET(arg_empty, EMPTY_FORCE, EMPTY_REQUIRE, EMPTY_CREATE) && !arg_node && !arg_image)
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                       "A path to a device node or image file must be specified when --make-ddi=, --empty=force, --empty=require or --empty=create are used.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "A path to a device node or image file must be specified when --make-ddi=, --empty=force, --empty=require or --empty=create are used.");
 
         if (arg_split && !arg_node)
-                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                       "A path to an image file must be specified when --split is used.");
+                return log_error_errno(
+                                SYNTHETIC_ERRNO(EINVAL),
+                                "A path to an image file must be specified when --split is used.");
 
         if (auto_pcrlock) {
                 assert(!arg_tpm2_pcrlock);
@@ -7036,7 +7641,9 @@ static int parse_argv(int argc, char *argv[]) {
                 r = tpm2_pcrlock_search_file(NULL, NULL, &arg_tpm2_pcrlock);
                 if (r < 0) {
                         if (r != -ENOENT)
-                                log_warning_errno(r, "Search for pcrlock.json failed, assuming it does not exist: %m");
+                                log_warning_errno(
+                                                r,
+                                                "Search for pcrlock.json failed, assuming it does not exist: %m");
                 } else
                         log_debug("Automatically using pcrlock policy '%s'.", arg_tpm2_pcrlock);
         }
@@ -7062,10 +7669,10 @@ static int parse_argv(int argc, char *argv[]) {
 
         if (arg_architecture >= 0) {
                 FOREACH_ARRAY(p, arg_filter_partitions, arg_n_filter_partitions)
-                        *p = gpt_partition_type_override_architecture(*p, arg_architecture);
+                *p = gpt_partition_type_override_architecture(*p, arg_architecture);
 
                 FOREACH_ARRAY(p, arg_defer_partitions, arg_n_defer_partitions)
-                        *p = gpt_partition_type_override_architecture(*p, arg_architecture);
+                *p = gpt_partition_type_override_architecture(*p, arg_architecture);
         }
 
         return 1;
@@ -7083,7 +7690,8 @@ static int parse_proc_cmdline_factory_reset(void) {
 
         r = proc_cmdline_get_bool("systemd.factory_reset", /* flags = */ 0, &b);
         if (r < 0)
-                return log_error_errno(r, "Failed to parse systemd.factory_reset kernel command line argument: %m");
+                return log_error_errno(
+                                r, "Failed to parse systemd.factory_reset kernel command line argument: %m");
         if (r > 0) {
                 arg_factory_reset = b;
 
@@ -7136,12 +7744,7 @@ static int remove_efi_variable_factory_reset(void) {
         return 0;
 }
 
-static int acquire_root_devno(
-                const char *p,
-                const char *root,
-                int mode,
-                char **ret,
-                int *ret_fd) {
+static int acquire_root_devno(const char *p, const char *root, int mode, char **ret, int *ret_fd) {
 
         _cleanup_free_ char *found_path = NULL, *node = NULL;
         dev_t devno, fd_devno = MODE_INVALID;
@@ -7189,7 +7792,9 @@ static int acquire_root_devno(
         /* From dm-crypt to backing partition */
         r = block_get_originating(devno, &devno);
         if (r == -ENOENT)
-                log_debug_errno(r, "Device '%s' has no dm-crypt/dm-verity device, no need to look for underlying block device.", p);
+                log_debug_errno(r,
+                                "Device '%s' has no dm-crypt/dm-verity device, no need to look for underlying block device.",
+                                p);
         else if (r < 0)
                 log_debug_errno(r, "Failed to find underlying block device for '%s', ignoring: %m", p);
 
@@ -7232,7 +7837,7 @@ static int find_root(Context *context) {
                         if (!s)
                                 return log_oom();
 
-                        fd = open(arg_node, O_RDONLY|O_CREAT|O_EXCL|O_CLOEXEC|O_NOFOLLOW, 0666);
+                        fd = open(arg_node, O_RDONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0666);
                         if (fd < 0)
                                 return log_error_errno(errno, "Failed to create '%s': %m", arg_node);
 
@@ -7244,11 +7849,15 @@ static int find_root(Context *context) {
 
                 /* Note that we don't specify a root argument here: if the user explicitly configured a node
                  * we'll take it relative to the host, not the image */
-                r = acquire_root_devno(arg_node, NULL, O_RDONLY|O_CLOEXEC, &context->node, &context->backing_fd);
+                r = acquire_root_devno(
+                                arg_node, NULL, O_RDONLY | O_CLOEXEC, &context->node, &context->backing_fd);
                 if (r == -EUCLEAN)
                         return btrfs_log_dev_root(LOG_ERR, r, arg_node);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to open file or determine backing device of %s: %m", arg_node);
+                        return log_error_errno(
+                                        r,
+                                        "Failed to open file or determine backing device of %s: %m",
+                                        arg_node);
 
                 return 0;
         }
@@ -7260,30 +7869,37 @@ static int find_root(Context *context) {
          * here. */
         r = readlink_malloc("/run/systemd/volatile-root", &device);
         if (r == -ENOENT) { /* volatile-root not found */
-                /* Let's search for the root device. We look for two cases here: first in /, and then in /usr. The
-                * latter we check for cases where / is a tmpfs and only /usr is an actual persistent block device
-                * (think: volatile setups) */
+                /* Let's search for the root device. We look for two cases here: first in /, and then in
+                 * /usr. The latter we check for cases where / is a tmpfs and only /usr is an actual
+                 * persistent block device (think: volatile setups) */
 
                 FOREACH_STRING(p, "/", "/usr") {
 
-                        r = acquire_root_devno(p, arg_root, O_RDONLY|O_DIRECTORY|O_CLOEXEC, &context->node,
-                                               &context->backing_fd);
+                        r = acquire_root_devno(
+                                        p,
+                                        arg_root,
+                                        O_RDONLY | O_DIRECTORY | O_CLOEXEC,
+                                        &context->node,
+                                        &context->backing_fd);
                         if (r < 0) {
                                 if (r == -EUCLEAN)
                                         return btrfs_log_dev_root(LOG_ERR, r, p);
                                 if (r != -ENODEV)
-                                        return log_error_errno(r, "Failed to determine backing device of %s: %m", p);
+                                        return log_error_errno(
+                                                        r, "Failed to determine backing device of %s: %m", p);
                         } else
                                 return 0;
                 }
         } else if (r < 0)
                 return log_error_errno(r, "Failed to read symlink /run/systemd/volatile-root: %m");
         else {
-                r = acquire_root_devno(device, NULL, O_RDONLY|O_CLOEXEC, &context->node, &context->backing_fd);
+                r = acquire_root_devno(
+                                device, NULL, O_RDONLY | O_CLOEXEC, &context->node, &context->backing_fd);
                 if (r == -EUCLEAN)
                         return btrfs_log_dev_root(LOG_ERR, r, device);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to open file or determine backing device of %s: %m", device);
+                        return log_error_errno(
+                                        r, "Failed to open file or determine backing device of %s: %m", device);
 
                 return 0;
         }
@@ -7305,7 +7921,10 @@ static int resize_pt(int fd, uint64_t sector_size) {
 
         r = fdisk_has_label(c);
         if (r < 0)
-                return log_error_errno(r, "Failed to determine whether disk '%s' has a disk label: %m", FORMAT_PROC_FD_PATH(fd));
+                return log_error_errno(
+                                r,
+                                "Failed to determine whether disk '%s' has a disk label: %m",
+                                FORMAT_PROC_FD_PATH(fd));
         if (r == 0) {
                 log_debug("Not resizing partition table, as there currently is none.");
                 return 0;
@@ -7320,9 +7939,10 @@ static int resize_pt(int fd, uint64_t sector_size) {
 }
 
 static int resize_backing_fd(
-                const char *node,           /* The primary way we access the disk image to operate on */
-                int *fd,                    /* An O_RDONLY fd referring to that inode */
-                const char *backing_file,   /* If the above refers to a loopback device, the backing regular file for that, which we can grow */
+                const char *node,         /* The primary way we access the disk image to operate on */
+                int *fd,                  /* An O_RDONLY fd referring to that inode */
+                const char *backing_file, /* If the above refers to a loopback device, the backing regular
+                                             file for that, which we can grow */
                 LoopDevice *loop_device,
                 uint64_t sector_size) {
 
@@ -7340,7 +7960,7 @@ static int resize_backing_fd(
         if (*fd < 0) {
                 /* Open the file if we haven't opened it yet. Note that we open it read-only here, just to
                  * keep a reference to the file we can pass around. */
-                *fd = open(node, O_RDONLY|O_CLOEXEC);
+                *fd = open(node, O_RDONLY | O_CLOEXEC);
                 if (*fd < 0)
                         return log_error_errno(errno, "Failed to open '%s' in order to adjust size: %m", node);
         }
@@ -7350,7 +7970,8 @@ static int resize_backing_fd(
 
         if (S_ISBLK(st.st_mode)) {
                 if (!backing_file)
-                        return log_error_errno(SYNTHETIC_ERRNO(EBADF), "Cannot resize block device '%s'.", node);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EBADF), "Cannot resize block device '%s'.", node);
 
                 assert(loop_device);
 
@@ -7359,7 +7980,10 @@ static int resize_backing_fd(
         } else {
                 r = stat_verify_regular(&st);
                 if (r < 0)
-                        return log_error_errno(r, "Specified path '%s' is not a regular file or loopback block device, cannot resize: %m", node);
+                        return log_error_errno(
+                                        r,
+                                        "Specified path '%s' is not a regular file or loopback block device, cannot resize: %m",
+                                        node);
 
                 assert(!backing_file);
                 assert(!loop_device);
@@ -7368,7 +7992,9 @@ static int resize_backing_fd(
 
         if (current_size >= arg_size) {
                 log_info("File '%s' already is of requested size or larger, not growing. (%s >= %s)",
-                         node, FORMAT_BYTES(current_size), FORMAT_BYTES(arg_size));
+                         node,
+                         FORMAT_BYTES(current_size),
+                         FORMAT_BYTES(arg_size));
                 return 0;
         }
 
@@ -7378,7 +8004,7 @@ static int resize_backing_fd(
                 /* This is a loopback device. We can't really grow those directly, but we can grow the
                  * backing file, hence let's do that. */
 
-                writable_fd = open(backing_file, O_WRONLY|O_CLOEXEC|O_NONBLOCK);
+                writable_fd = open(backing_file, O_WRONLY | O_CLOEXEC | O_NONBLOCK);
                 if (writable_fd < 0)
                         return log_error_errno(errno, "Failed to open backing file '%s': %m", backing_file);
 
@@ -7387,30 +8013,40 @@ static int resize_backing_fd(
 
                 r = stat_verify_regular(&st);
                 if (r < 0)
-                        return log_error_errno(r, "Backing file '%s' of block device is not a regular file: %m", backing_file);
+                        return log_error_errno(
+                                        r,
+                                        "Backing file '%s' of block device is not a regular file: %m",
+                                        backing_file);
 
                 if ((uint64_t) st.st_size != current_size)
-                        return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
-                                               "Size of backing file '%s' of loopback block device '%s' don't match, refusing.",
-                                               node, backing_file);
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EINVAL),
+                                        "Size of backing file '%s' of loopback block device '%s' don't match, refusing.",
+                                        node,
+                                        backing_file);
         } else {
                 assert(S_ISREG(st.st_mode));
                 assert(!backing_file);
 
-                /* The file descriptor is read-only. In order to grow the file we need to have a writable fd. We
-                 * reopen the file for that temporarily. We keep the writable fd only open for this operation though,
-                 * as fdisk can't accept it anyway. */
+                /* The file descriptor is read-only. In order to grow the file we need to have a writable fd.
+                 * We reopen the file for that temporarily. We keep the writable fd only open for this
+                 * operation though, as fdisk can't accept it anyway. */
 
-                writable_fd = fd_reopen(*fd, O_WRONLY|O_CLOEXEC);
+                writable_fd = fd_reopen(*fd, O_WRONLY | O_CLOEXEC);
                 if (writable_fd < 0)
-                        return log_error_errno(writable_fd, "Failed to reopen backing file '%s' writable: %m", node);
+                        return log_error_errno(
+                                        writable_fd, "Failed to reopen backing file '%s' writable: %m", node);
         }
 
         if (!arg_discard) {
                 if (fallocate(writable_fd, 0, 0, arg_size) < 0) {
                         if (!ERRNO_IS_NOT_SUPPORTED(errno))
-                                return log_error_errno(errno, "Failed to grow '%s' from %s to %s by allocation: %m",
-                                                       node, FORMAT_BYTES(current_size), FORMAT_BYTES(arg_size));
+                                return log_error_errno(
+                                                errno,
+                                                "Failed to grow '%s' from %s to %s by allocation: %m",
+                                                node,
+                                                FORMAT_BYTES(current_size),
+                                                FORMAT_BYTES(arg_size));
 
                         /* Fallback to truncation, if fallocate() is not supported. */
                         log_debug("Backing file system does not support fallocate(), falling back to ftruncate().");
@@ -7419,21 +8055,29 @@ static int resize_backing_fd(
                                 log_info("Allocated %s for '%s'.", FORMAT_BYTES(arg_size), node);
                         else
                                 log_info("File '%s' grown from %s to %s by allocation.",
-                                         node, FORMAT_BYTES(current_size), FORMAT_BYTES(arg_size));
+                                         node,
+                                         FORMAT_BYTES(current_size),
+                                         FORMAT_BYTES(arg_size));
 
                         goto done;
                 }
         }
 
         if (ftruncate(writable_fd, arg_size) < 0)
-                return log_error_errno(errno, "Failed to grow '%s' from %s to %s by truncation: %m",
-                                       node, FORMAT_BYTES(current_size), FORMAT_BYTES(arg_size));
+                return log_error_errno(
+                                errno,
+                                "Failed to grow '%s' from %s to %s by truncation: %m",
+                                node,
+                                FORMAT_BYTES(current_size),
+                                FORMAT_BYTES(arg_size));
 
         if (current_size == 0) /* Likely regular file just created by us */
                 log_info("Sized '%s' to %s.", node, FORMAT_BYTES(arg_size));
         else
                 log_info("File '%s' grown from %s to %s by truncation.",
-                         node, FORMAT_BYTES(current_size), FORMAT_BYTES(arg_size));
+                         node,
+                         FORMAT_BYTES(current_size),
+                         FORMAT_BYTES(arg_size));
 
 done:
         r = resize_pt(writable_fd, sector_size);
@@ -7464,7 +8108,8 @@ static int determine_auto_size(Context *c) {
 
                 m = partition_min_size_with_padding(c, p);
                 if (m > UINT64_MAX - sum)
-                        return log_error_errno(SYNTHETIC_ERRNO(EOVERFLOW), "Image would grow too large, refusing.");
+                        return log_error_errno(
+                                        SYNTHETIC_ERRNO(EOVERFLOW), "Image would grow too large, refusing.");
 
                 sum += m;
         }
@@ -7472,11 +8117,11 @@ static int determine_auto_size(Context *c) {
         if (c->total != UINT64_MAX)
                 /* Image already allocated? Then show its size. */
                 log_info("Automatically determined minimal disk image size as %s, current image size is %s.",
-                         FORMAT_BYTES(sum), FORMAT_BYTES(c->total));
+                         FORMAT_BYTES(sum),
+                         FORMAT_BYTES(c->total));
         else
                 /* If the image is being created right now, then it has no previous size, suppress any comment about it hence. */
-                log_info("Automatically determined minimal disk image size as %s.",
-                         FORMAT_BYTES(sum));
+                log_info("Automatically determined minimal disk image size as %s.", FORMAT_BYTES(sum));
 
         arg_size = sum;
         return 0;
@@ -7485,7 +8130,7 @@ static int determine_auto_size(Context *c) {
 static int run(int argc, char *argv[]) {
         _cleanup_(loop_device_unrefp) LoopDevice *loop_device = NULL;
         _cleanup_(umount_and_freep) char *mounted_dir = NULL;
-        _cleanup_(context_freep) Context* context = NULL;
+        _cleanup_(context_freep) Context *context = NULL;
         bool node_is_our_loop = false;
         int r;
 
@@ -7685,9 +8330,10 @@ static int run(int argc, char *argv[]) {
                         break; /* Success! */
 
                 if (!context_drop_or_foreignize_one_priority(context)) {
-                        r = log_error_errno(SYNTHETIC_ERRNO(ENOSPC),
-                                            "Can't fit requested partitions into available free space (%s), refusing.",
-                                            FORMAT_BYTES(largest_free_area));
+                        r = log_error_errno(
+                                        SYNTHETIC_ERRNO(ENOSPC),
+                                        "Can't fit requested partitions into available free space (%s), refusing.",
+                                        FORMAT_BYTES(largest_free_area));
                         determine_auto_size(context);
                         return r;
                 }
@@ -7701,7 +8347,7 @@ static int run(int argc, char *argv[]) {
         /* Now calculate where each new partition gets placed */
         context_place_partitions(context);
 
-        (void) context_dump(context, /*late=*/ false);
+        (void) context_dump(context, /*late=*/false);
 
         r = context_write_partition_table(context);
         if (r < 0)
@@ -7711,7 +8357,7 @@ static int run(int argc, char *argv[]) {
         if (r < 0)
                 return r;
 
-        (void) context_dump(context, /*late=*/ true);
+        (void) context_dump(context, /*late=*/true);
 
         context->node = mfree(context->node);
 

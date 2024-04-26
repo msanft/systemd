@@ -92,11 +92,12 @@ TEST(mkdir_p_safe) {
 TEST(mkdir_p_root) {
         _cleanup_(rm_rf_physical_and_freep) char *tmp = NULL;
         _cleanup_free_ char *p = NULL;
+        struct stat st;
 
         assert_se(mkdtemp_malloc("/tmp/test-mkdir-XXXXXX", &tmp) >= 0);
 
         assert_se(p = path_join(tmp, "run/aaa/bbb"));
-        assert_se(mkdir_p_root(tmp, "/run/aaa/bbb", UID_INVALID, GID_INVALID, 0755, NULL) >= 0);
+        assert_se(mkdir_p_root(tmp, "/run/aaa/bbb", UID_INVALID, GID_INVALID, 0755, NULL, 0) >= 0);
         assert_se(is_dir(p, false) > 0);
         assert_se(is_dir(p, true) > 0);
 
@@ -109,18 +110,25 @@ TEST(mkdir_p_root) {
 
         p = mfree(p);
         assert_se(p = path_join(tmp, "var/run/hoge/foo/baz"));
-        assert_se(mkdir_p_root(tmp, "/var/run/hoge/foo/baz", UID_INVALID, GID_INVALID, 0755, NULL) >= 0);
+        assert_se(mkdir_p_root(tmp, "/var/run/hoge/foo/baz", UID_INVALID, GID_INVALID, 0755, NULL, 0) >= 0);
         assert_se(is_dir(p, false) > 0);
         assert_se(is_dir(p, true) > 0);
 
         p = mfree(p);
         assert_se(p = path_join(tmp, "not-exists"));
-        assert_se(mkdir_p_root(p, "/aaa", UID_INVALID, GID_INVALID, 0755, NULL) == -ENOENT);
+        assert_se(mkdir_p_root(p, "/aaa", UID_INVALID, GID_INVALID, 0755, NULL, 0) == -ENOENT);
 
         p = mfree(p);
         assert_se(p = path_join(tmp, "regular-file"));
         assert_se(touch(p) >= 0);
-        assert_se(mkdir_p_root(p, "/aaa", UID_INVALID, GID_INVALID, 0755, NULL) == -ENOTDIR);
+        assert_se(mkdir_p_root(p, "/aaa", UID_INVALID, GID_INVALID, 0755, NULL, 0) == -ENOTDIR);
+
+        p = mfree(p);
+        assert_se(p = path_join(tmp, "foo/bar"));
+        assert_se(mkdir_p_root(tmp, "/foo/bar", UID_INVALID, GID_INVALID, 0755, NULL, 1234) >= 0);
+        assert_se(is_dir(p, false) > 0);
+        assert_se(is_dir(p, true) > 0);
+        assert_se(stat(p, &st) >= 0 && st.st_mtim == 1234 && st.st_atim == 1234);
 
         /* FIXME: The tests below do not work.
         p = mfree(p);
